@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "F57E5F49-BC88-4A6B-819C-914BA6DD9F86"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F630CAA8-722D-4C9F-88EC-2D7BF1B7592C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Places/LocationService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "17"
+            endingLineNumber = "17"
+            landmarkName = "fetchLocations()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "F630CAA8-722D-4C9F-88EC-2D7BF1B7592C - b9689324d0cbe50e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for Places.LocationService.fetchLocations() async throws -&gt; Swift.Array&lt;Places.Location&gt;"
+                  moduleName = "Places.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/okarsl/Desktop/nikedev/Places/Places/LocationService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "17"
+                  endingLineNumber = "17">
+               </Location>
+               <Location
+                  uuid = "F630CAA8-722D-4C9F-88EC-2D7BF1B7592C - b9689324d0cbe50e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for Places.LocationService.fetchLocations() async throws -&gt; Swift.Array&lt;Places.Location&gt;"
+                  moduleName = "Places.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/okarsl/Desktop/nikedev/Places/Places/LocationService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "17"
+                  endingLineNumber = "17">
+               </Location>
+               <Location
+                  uuid = "F630CAA8-722D-4C9F-88EC-2D7BF1B7592C - 6a7ee73295e68b0f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for Places.LocationService.fetchLocations() async throws -&gt; Swift.Array&lt;Places.Location&gt;"
+                  moduleName = "Places.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/okarsl/Desktop/nikedev/Places/Places/LocationService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "17"
+                  endingLineNumber = "17">
+               </Location>
+               <Location
+                  uuid = "F630CAA8-722D-4C9F-88EC-2D7BF1B7592C - 6a7ee73295e68b0f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for Places.LocationService.fetchLocations() async throws -&gt; Swift.Array&lt;Places.Location&gt;"
+                  moduleName = "Places.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/okarsl/Desktop/nikedev/Places/Places/LocationService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "17"
+                  endingLineNumber = "17">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
