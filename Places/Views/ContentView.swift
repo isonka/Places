@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel: PlacesViewModel
+    @EnvironmentObject var wikipediaCoordinator: WikipediaCoordinator
     
     init(viewModel: PlacesViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -19,49 +20,55 @@ struct ContentView: View {
             VStack {
                 if viewModel.isLoading {
                     ProgressView("Loading locations...")
-                } else if viewModel.showError {
-                    Text("Failed to load locations.")
+                } else if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
                         .foregroundColor(.red)
                 } else {
                     List {
-                        ForEach(viewModel.locations) { location in
-                            Button(action: {
-                                viewModel.openWikipedia(latitude: location.lat, longitude: location.long)
-                            }) {
-                                VStack(alignment: .leading) {
-                                    if let name = location.name {
-                                        Text(name)
-                                            .font(.headline)
+                        Section(header: Text("Places")) {
+                            ForEach(viewModel.locations) { location in
+                                Button(action: {
+                                    wikipediaCoordinator.openWikipedia(latitude: location.lat, longitude: location.long)
+                                }) {
+                                    VStack(alignment: .leading) {
+                                        if let name = location.name {
+                                            Text(name)
+                                                .font(.headline)
+                                        }
+                                        Text("Latitude: \(location.lat), Longitude: \(location.long)")
+                                            .font(.subheadline)
                                     }
-                                    Text("Latitude: \(location.lat), Longitude: \(location.long)")
-                                        .font(.subheadline)
                                 }
+                                .accessibilityLabel(location.name ?? "Unknown Location")
+                                .accessibilityHint("Opens Wikipedia for this location")
                             }
-                            .accessibilityLabel(location.name ?? "Unknown Location")
-                            .accessibilityHint("Opens Wikipedia for this location")
                         }
                         Section(header: Text("Custom Location")) {
-                            VStack {
+                            VStack {                                
                                 TextField("Latitude", text: $viewModel.customLatitude)
                                     .keyboardType(.decimalPad)
                                     .accessibilityLabel("Custom latitude input")
+                                    .padding()
                                 TextField("Longitude", text: $viewModel.customLongitude)
                                     .keyboardType(.decimalPad)
                                     .accessibilityLabel("Custom longitude input")
-                                Button("Open in Wikipedia") {
-                                    viewModel.openCustomLocation()
+                                    .padding()
+                                Button("Open Wikipedia for Custom Location") {
+                                    wikipediaCoordinator.openCustomLocation(latitude: viewModel.customLatitude, longitude: viewModel.customLongitude)
                                 }
-                                .accessibilityLabel("Open custom location in Wikipedia")
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(12)
+                                .accessibilityLabel("Open Wikipedia for custom location")
                             }
-                            .padding()
                         }
                     }
                 }
             }
-            .navigationTitle("Places")
-            .alert("Wikipedia app is not installed.", isPresented: $viewModel.showWikipediaAlert) {
-                Button("OK", role: .cancel) {}
+            .alert(isPresented: $wikipediaCoordinator.showWikipediaAlert) {
+                Alert(title: Text("Wikipedia app not found"), message: Text("Please install the Wikipedia app to view locations."), dismissButton: .default(Text("OK")))
             }
+            .navigationTitle("Places")
         }.onAppear() {
             Task {
                 await viewModel.loadLocations()
@@ -72,4 +79,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView(viewModel: PlacesViewModel(locationService: LocationService(networkManager: NetworkManager( connectivityService: ConnectivityService.shared))))
+        .environmentObject(WikipediaCoordinator())
 }
