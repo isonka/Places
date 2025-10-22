@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import Combine
 
 @main
 struct PlacesApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(viewModel: PlacesViewModel(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared))))
+                
         }
     }
 }

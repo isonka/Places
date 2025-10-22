@@ -9,6 +9,6 @@ import Testing
 import Foundation
 @testable import Places
 
-struct PlacesTests {
+struct LocationTests {
    
 }

@@ -1,5 +1,9 @@
 import Foundation
 
+struct LocationsResponse: Codable {
+    let locations: [Location]
+}
+
 struct Location: Codable, Identifiable {
     let name: String?
     let lat: Double

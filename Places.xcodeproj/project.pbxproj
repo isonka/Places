@@ -33,7 +33,6 @@
 		F037A0482EA944E000752777 /* Exceptions for "Places" folder in "Places" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"ContentView 2.swift",
 				Info.plist,
 			);
 			target = F037A0082EA941C500752777 /* Places */;
