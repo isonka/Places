@@ -11,8 +11,7 @@ enum NetworkError: Error, LocalizedError, Equatable {
     case decodingFailed(Error)
     case unknown
     case noConnection
-    
-    
+    case status(Int)
     
     var errorDescription: String? {
         switch self {
@@ -26,6 +25,8 @@ enum NetworkError: Error, LocalizedError, Equatable {
             return "No internet connection."
         case .unknown:
             return "An unknown error occurred."
+        case .status(let code):
+            return "Unexpected HTTP status code: \(code)"
         }
     }
     
@@ -36,6 +37,7 @@ enum NetworkError: Error, LocalizedError, Equatable {
         case (.unknown, .unknown): return true
         case (.requestFailed, .requestFailed): return true
         case (.decodingFailed, .decodingFailed): return true
+        case (.status, .status): return true
         default: return false
         }
     }
@@ -74,7 +76,10 @@ final class NetworkManager: NetworkManagerProtocol {
         }
         request.httpBody = body
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                throw NetworkError.status(httpResponse.statusCode)
+            }
             do {
                 let decoded = try JSONDecoder().decode(T.self, from: data)
                 return decoded

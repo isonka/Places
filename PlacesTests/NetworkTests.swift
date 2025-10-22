@@ -16,13 +16,21 @@ class MockConnectivityService: ConnectivityServiceProtocol {
     }
 }
 
+struct Dummy: Codable, Equatable {
+    let value: String
+}
+
 struct MockNetworkManager: NetworkManagerProtocol {
     var mockData: Data?
     var shouldFail: Bool = false
     var connectivityService: ConnectivityServiceProtocol = MockConnectivityService(isConnected: true)
+    var statusCode: Int? = nil // New property to simulate status error
     func fetch<T: Decodable>(from urlString: String, method: HTTPMethod = .GET, headers: [String: String]? = nil, body: Data? = nil) async throws -> T {
         if !connectivityService.isConnected {
             throw NetworkError.noConnection
+        }
+        if let code = statusCode {
+            throw NetworkError.status(code)
         }
         if shouldFail {
             throw NetworkError.requestFailed(URLError(.badServerResponse))
@@ -93,10 +101,31 @@ struct NetworkTests {
         }
     }
 
+    @Test func testNetworkManagerStatusError() async throws {
+        let mockManager = MockNetworkManager(statusCode: 404)
+        do {
+            let _: LocationsResponse = try await mockManager.fetch(from: "http://test", method: .GET, headers: nil, body: nil)
+            #expect(Bool(false), "Should throw NetworkError.status error")
+        } catch let error as NetworkError {
+            #expect(error == .status(404))
+        } catch {
+            #expect(Bool(false), "Unexpected error type")
+        }
+    }
+
     @Test func testConnectivityServiceStatus() {
         let connected = MockConnectivityService(isConnected: true)
         let disconnected = MockConnectivityService(isConnected: false)
         #expect(connected.isConnected)
         #expect(!disconnected.isConnected)
+    }
+    
+    @Test func testGenericServiceSuccess() async throws {
+        let dummyJson = """
+        {"value": "Hello"}
+        """.data(using: .utf8)!
+        let mockManager = MockNetworkManager(mockData: dummyJson)
+        let result: Dummy = try await mockManager.fetch(from: "http://test")
+        #expect(result == Dummy(value: "Hello"))
     }
 }
