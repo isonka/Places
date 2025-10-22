@@ -44,20 +44,36 @@ struct ContentView: View {
                             }
                         }
                         Section(header: Text("Custom Location")) {
-                            VStack {                                
+                            VStack {
                                 TextField("Latitude", text: $viewModel.customLatitude)
                                     .keyboardType(.decimalPad)
                                     .accessibilityLabel("Custom latitude input")
                                     .padding()
+                                if let latitudeError = viewModel.latitudeError {
+                                    Text(latitudeError)
+                                        .foregroundColor(.red)
+                                        .font(.caption)
+                                }
                                 TextField("Longitude", text: $viewModel.customLongitude)
                                     .keyboardType(.decimalPad)
                                     .accessibilityLabel("Custom longitude input")
                                     .padding()
-                                Button("Open Wikipedia for Custom Location") {
-                                    wikipediaCoordinator.openCustomLocation(latitude: viewModel.customLatitude, longitude: viewModel.customLongitude)
+                                if let longitudeError = viewModel.longitudeError {
+                                    Text(longitudeError)
+                                        .foregroundColor(.red)
+                                        .font(.caption)
                                 }
+                                Button("Open Wikipedia for Custom Location") {
+                                    if viewModel.isCustomLocationValid {
+                                        wikipediaCoordinator.openWikipedia(
+                                            latitude: Double(viewModel.customLatitude) ?? 0.0,
+                                            longitude: Double(viewModel.customLongitude) ?? 0.0
+                                        )
+                                    }
+                                }
+                                .disabled(!viewModel.isCustomLocationValid)
                                 .padding()
-                                .background(Color.blue)
+                                .background(viewModel.isCustomLocationValid ? Color.blue : Color.gray)
                                 .cornerRadius(12)
                                 .accessibilityLabel("Open Wikipedia for custom location")
                             }
