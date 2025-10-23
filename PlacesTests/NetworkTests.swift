@@ -5,8 +5,7 @@
 //  Created by Onur Karsli on 22/10/2025.
 //
 
-import Testing
-import Foundation
+import XCTest
 @testable import Places
 
 class MockConnectivityService: ConnectivityServiceProtocol {
@@ -20,7 +19,14 @@ struct Dummy: Codable, Equatable {
     let value: String
 }
 
-struct MockNetworkManager: NetworkManagerProtocol {
+class MockNetworkManager: NetworkManagerProtocol {
+    init(mockData: Data? = nil, connectivityService: ConnectivityServiceProtocol = MockConnectivityService(isConnected: true), statusCode: Int? = nil, shouldFail: Bool = false) {
+        self.mockData = mockData
+        self.connectivityService = connectivityService
+        self.statusCode = statusCode
+        self.shouldFail = shouldFail
+    }
+    
     var mockData: Data?
     var shouldFail: Bool = false
     var connectivityService: ConnectivityServiceProtocol = MockConnectivityService(isConnected: true)
@@ -46,86 +52,90 @@ struct MockNetworkManager: NetworkManagerProtocol {
     }
 }
 
-struct NetworkTests {
+final class NetworkTests: XCTestCase {
+    var mockManager: MockNetworkManager!
+    var connectivityService: MockConnectivityService!
     
-    @Test func testNetworkManagerNoConnection() async throws {
-        let mockManager = MockNetworkManager(mockData: nil, connectivityService: MockConnectivityService(isConnected: false))
+    override func setUp() async throws {
+        try await super.setUp()
+        connectivityService = MockConnectivityService(isConnected: true)
+        mockManager = MockNetworkManager(connectivityService: connectivityService)
+    }
+    
+    func testNetworkManagerNoConnection() async throws {
+        connectivityService.isConnected = false
         do {
-            
             let _: LocationsResponse = try await mockManager.fetch(from: "http://test", method: .GET, headers: nil, body: nil)
-            #expect(Bool(false), "Should throw NetworkError.noConnection")
+            XCTFail("Should throw NetworkError.noConnection")
         } catch let error as NetworkError {
-            #expect(error == .noConnection)
+            XCTAssertEqual(error, .noConnection)
         } catch {
-            #expect(Bool(false), "Unexpected error type")
+            XCTFail("Unexpected error type")
         }
     }
 
-    @Test func testNetworkManagerSuccess() async throws {
-        let json = """
+    func testNetworkManagerSuccess() async throws {
+        mockManager.mockData = """
         {"locations": [{"name": "Test Place", "lat": 41.2, "long": 29.0}]}
         """.data(using: .utf8)!
-        let mockManager = MockNetworkManager(mockData: json, connectivityService: MockConnectivityService(isConnected: true))
         let response: LocationsResponse = try await mockManager.fetch(from: "http://test", method: .GET, headers: nil, body: nil)
         let locations = response.locations
-        #expect(locations.count == 1)
-        #expect(locations.first?.name == "Test Place")
+        XCTAssertEqual(locations.count, 1)
+        XCTAssertEqual(locations.first?.name, "Test Place")
     }
 
-    @Test func testNetworkManagerDecodingFailure() async throws {
-        let invalidJson = "{invalid}".data(using: .utf8)!
-        let mockManager = MockNetworkManager(mockData: invalidJson, connectivityService: MockConnectivityService(isConnected: true))
+    func testNetworkManagerDecodingFailure() async throws {
+        mockManager.mockData = "{invalid}".data(using: .utf8)!
         do {
             let _: LocationsResponse = try await mockManager.fetch(from: "http://test", method: .GET, headers: nil, body: nil)
-            #expect(Bool(false), "Should throw NetworkError.decodingFailed")
+            XCTFail("Should throw NetworkError.decodingFailed")
         } catch let error as NetworkError {
-            // Only compare the case, not the associated value
-            #expect({
-                if case .decodingFailed = error { return true }
-                return false
-            }(), "Should throw decodingFailed error")
+            if case .decodingFailed = error {
+                // success
+            } else {
+                XCTFail("Should throw decodingFailed error")
+            }
         } catch {
-            #expect(Bool(false), "Unexpected error type")
+            XCTFail("Unexpected error type")
         }
     }
 
-    @Test func testNetworkManagerBadURL() async throws {
-        let mockManager = MockNetworkManager(mockData: nil, connectivityService: MockConnectivityService(isConnected: true))
+    func testNetworkManagerBadURL() async throws {
+        mockManager.mockData = nil
         do {
             let _: LocationsResponse = try await mockManager.fetch(from: "not a url", method: .GET, headers: nil, body: nil)
-            #expect(Bool(false), "Should throw NetworkError.badURL")
+            XCTFail("Should throw NetworkError.badURL")
         } catch let error as NetworkError {
-            #expect(error == .badURL)
+            XCTAssertEqual(error, .badURL)
         } catch {
-            #expect(Bool(false), "Unexpected error type")
+            XCTFail("Unexpected error type")
         }
     }
 
-    @Test func testNetworkManagerStatusError() async throws {
-        let mockManager = MockNetworkManager(statusCode: 404)
+    func testNetworkManagerStatusError() async throws {
+        mockManager.statusCode = 404
         do {
             let _: LocationsResponse = try await mockManager.fetch(from: "http://test", method: .GET, headers: nil, body: nil)
-            #expect(Bool(false), "Should throw NetworkError.status error")
+            XCTFail("Should throw NetworkError.status error")
         } catch let error as NetworkError {
-            #expect(error == .status(404))
+            XCTAssertEqual(error, .status(404))
         } catch {
-            #expect(Bool(false), "Unexpected error type")
+            XCTFail("Unexpected error type")
         }
     }
 
-    @Test func testConnectivityServiceStatus() {
-        let connected = MockConnectivityService(isConnected: true)
-        let disconnected = MockConnectivityService(isConnected: false)
-        #expect(connected.isConnected)
-        #expect(!disconnected.isConnected)
+    func testConnectivityServiceStatus() {
+        XCTAssertTrue(connectivityService.isConnected)
+        connectivityService.isConnected = false
+        XCTAssertFalse(connectivityService.isConnected)
     }
     
-    @Test func testGenericServiceSuccess() async throws {
+    func testGenericServiceSuccess() async throws {
         let dummyJson = """
         {"value": "Hello"}
         """.data(using: .utf8)!
-        let mockManager = MockNetworkManager(mockData: dummyJson)
+        mockManager.mockData = dummyJson
         let result: Dummy = try await mockManager.fetch(from: "http://test")
-        #expect(result == Dummy(value: "Hello"))
+        XCTAssertEqual(result, Dummy(value: "Hello"))
     }
 }

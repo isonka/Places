@@ -56,32 +56,12 @@ class PlacesViewModel: ObservableObject {
         .store(in: &cancellables)
     }
     
-    private func validateCoordinate(_ value: String, range: ClosedRange<Double>, errorSetter: (String?) -> Void, type: String) {
-        guard !value.isEmpty else {
-            errorSetter(nil)
-            return
-        }
-        if value.contains(",") {
-            errorSetter("Decimals must use . instead of ,")
-            return
-        }
-        guard let number = Double(value) else {
-            errorSetter("\(type) must be a valid number.")
-            return
-        }
-        guard range.contains(number) else {
-            errorSetter("\(type) must be between \(range.lowerBound) and \(range.upperBound).")
-            return
-        }
-        errorSetter(nil)
-    }
-    
     private func validateLatitude(_ value: String) {
-        validateCoordinate(value, range: -90...90, errorSetter: { self.latitudeError = $0 }, type: "Latitude")
+        latitudeError = LocationValidator.validateLatitude(value)
     }
     
     private func validateLongitude(_ value: String) {
-        validateCoordinate(value, range: -180...180, errorSetter: { self.longitudeError = $0 }, type: "Longitude")
+        longitudeError = LocationValidator.validateLongitude(value)
     }
     
     func validateCustomLocation() {
