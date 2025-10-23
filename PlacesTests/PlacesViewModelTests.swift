@@ -2,29 +2,17 @@ import XCTest
 import Foundation
 @testable import Places
 
-class MockLocationService: LocationServiceProtocol {
-    var result: Result<[Location], Error> = .success([])
-    func fetchLocations() async throws -> [Location] {
-        switch result {
-        case .success(let locations):
-            return locations
-        case .failure(let error):
-            throw error
-        }
-    }
-}
-
 @MainActor
 final class PlacesViewModelTests: XCTestCase {
     var mockService: MockLocationService!
     var viewModel: PlacesViewModel!
-
+    
     override func setUp() {
         super.setUp()
         mockService = MockLocationService()
-        viewModel = PlacesViewModel(locationService: mockService)
+        viewModel = PlacesViewModel(locationRepository: LocationRepository(locationService: mockService))
     }
-
+    
     func testInitialState() {
         XCTAssertTrue(viewModel.locations.isEmpty)
         XCTAssertTrue(viewModel.isLoading)
@@ -35,7 +23,7 @@ final class PlacesViewModelTests: XCTestCase {
     
     func testLoadLocationsSuccess() async throws {
         let location = Location(name: "Test Place", lat: 41.2, long: 29.0)
-        mockService.result = .success([location])
+        mockService.result = [location]
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
@@ -44,19 +32,19 @@ final class PlacesViewModelTests: XCTestCase {
     }
     
     func testLoadLocationsNetworkError() async throws {
-        mockService.result = .failure(NetworkError.noConnection)
+        mockService.errorToThrow = NetworkError.noConnection
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertTrue(viewModel.locations.isEmpty)
-        XCTAssertEqual(viewModel.errorMessage, NetworkError.noConnection.errorDescription)
+        XCTAssertFalse(viewModel.locations.isEmpty)
+        XCTAssertEqual(viewModel.errorMessage!, "Network error: \(NetworkError.noConnection.localizedDescription) Showing cached data.")
     }
     
     func testLoadLocationsOtherError() async throws {
-        mockService.result = .failure(NetworkError.badURL)
+        mockService.errorToThrow = NetworkError.badURL
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertTrue(viewModel.locations.isEmpty)
-        XCTAssertEqual(viewModel.errorMessage, NetworkError.badURL.localizedDescription)
+        XCTAssertFalse(viewModel.locations.isEmpty)
+        XCTAssertEqual(viewModel.errorMessage!, "Network error: \(NetworkError.badURL.localizedDescription) Showing cached data.")
     }
     
     func testCustomLocationValidation() {

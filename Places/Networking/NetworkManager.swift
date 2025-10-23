@@ -44,10 +44,10 @@ enum NetworkError: Error, LocalizedError, Equatable {
 }
 
 protocol NetworkManagerProtocol {
-    func fetch<T: Decodable>(from urlString: String,
-                            method: HTTPMethod,
-                            headers: [String: String]?,
-                            body: Data?) async throws -> T
+    nonisolated func fetch<T: Decodable>(from urlString: String,
+                                         method: HTTPMethod,
+                                         headers: [String: String]?,
+                                         body: Data?) async throws -> T
 }
 
 final class NetworkManager: NetworkManagerProtocol {
@@ -58,9 +58,9 @@ final class NetworkManager: NetworkManagerProtocol {
     }
     
     func fetch<T: Decodable>(from urlString: String,
-                            method: HTTPMethod = .GET,
-                            headers: [String: String]? = nil,
-                            body: Data? = nil) async throws -> T {
+                             method: HTTPMethod = .GET,
+                             headers: [String: String]? = nil,
+                             body: Data? = nil) async throws -> T {
         guard connectivityService.isConnected else {
             throw NetworkError.noConnection
         }

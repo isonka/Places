@@ -94,6 +94,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(viewModel: PlacesViewModel(locationService: LocationService(networkManager: NetworkManager( connectivityService: ConnectivityService.shared))))
-        .environmentObject(WikipediaCoordinator())
+    ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared))))) 
 }

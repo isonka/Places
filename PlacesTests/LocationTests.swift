@@ -20,7 +20,6 @@ final class LocationTests: XCTestCase {
         mockManager = MockNetworkManager(connectivityService: connectivityService)
         service = LocationService(networkManager: mockManager)
     }
-    
 
     func testLocationServiceSuccess() async throws {
         mockManager.mockData = """

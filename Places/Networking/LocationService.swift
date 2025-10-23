@@ -14,7 +14,11 @@ class LocationService: LocationServiceProtocol {
     }
     
     func fetchLocations() async throws -> [Location] {
-        let response: LocationsResponse = try await networkManager.fetch(from: urlString, method: .GET, headers: nil, body: nil)
-        return response.locations
+        do {
+            let response: LocationsResponse = try await networkManager.fetch(from: urlString, method: .GET, headers: nil, body: nil)
+            return response.locations
+        } catch {
+            throw error
+        }
     }
 }

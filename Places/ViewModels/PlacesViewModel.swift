@@ -12,7 +12,7 @@ class PlacesViewModel: ObservableObject {
     @Published var latitudeError: String? = nil
     @Published var longitudeError: String? = nil
     
-    private let locationService: LocationServiceProtocol
+    private let locationRepository: LocationRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
     
     var isCustomLocationValid: Bool {
@@ -20,29 +20,27 @@ class PlacesViewModel: ObservableObject {
             !customLatitude.isEmpty && !customLongitude.isEmpty
     }
     
-    init(locationService: LocationServiceProtocol) {
-        self.locationService = locationService
+    init(locationRepository: LocationRepositoryProtocol) {
+        self.locationRepository = locationRepository
         setupValidation()
     }
     
     func loadLocations() async {
         isLoading = true
         errorMessage = nil
-        do {
-            locations = try await locationService.fetchLocations()
-            isLoading = false
-        } catch let error as NetworkError {
-            switch error {
-            case .noConnection:
-                errorMessage = error.errorDescription
-            default:
-                errorMessage = error.localizedDescription
-            }
-            isLoading = false
-        } catch {
+        let result = await locationRepository.fetchLocations()
+        switch result {
+        case .success(let locs):
+            locations = locs
+            errorMessage = nil
+        case .failureWithCache(let error, let cached):
+            locations = cached
+            errorMessage = "Network error: \(error.localizedDescription) Showing cached data."
+        case .failure(let error):
+            locations = []
             errorMessage = error.localizedDescription
-            isLoading = false
         }
+        isLoading = false
     }
     
     private func setupValidation() {

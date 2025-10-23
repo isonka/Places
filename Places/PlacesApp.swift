@@ -13,7 +13,7 @@ struct PlacesApp: App {
     let wikipediaCoordinator = WikipediaCoordinator()
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: PlacesViewModel(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared))))
+            ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared)))))
                 .environmentObject(wikipediaCoordinator)
         }
     }
