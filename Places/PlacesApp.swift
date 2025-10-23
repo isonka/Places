@@ -10,7 +10,7 @@ import Combine
 
 @main
 struct PlacesApp: App {
-    let wikipediaCoordinator = WikipediaCoordinator()
+    let wikipediaService = WikipediaService()
     let connectivityService = ConnectivityService()
     
     var body: some Scene {
@@ -26,7 +26,7 @@ struct PlacesApp: App {
                     )
                 )
             )
-            .environmentObject(wikipediaCoordinator)
+            .environmentObject(wikipediaService)
         }
     }
 }

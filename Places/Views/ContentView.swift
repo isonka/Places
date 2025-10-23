@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel: PlacesViewModel
-    @EnvironmentObject var wikipediaCoordinator: WikipediaCoordinator
+    @EnvironmentObject var wikipediaService: WikipediaService
     private let logger = LoggingService.shared
     
     init(viewModel: PlacesViewModel) {
@@ -21,7 +21,7 @@ struct ContentView: View {
             }
             .animation(.easeInOut, value: viewModel.userFacingError?.id)
             .navigationTitle("Places")
-            .sheet(item: $wikipediaCoordinator.wikipediaError) { error in
+            .sheet(item: $wikipediaService.wikipediaError) { error in
                 WikipediaErrorSheet(error: error)
                     .presentationDetents([.medium])
             }
@@ -64,7 +64,7 @@ struct ContentView: View {
     }
     
     private func handleLocationTap(_ location: Location) {
-        wikipediaCoordinator.openWikipedia(
+        wikipediaService.openWikipedia(
             latitude: location.lat,
             longitude: location.long
         )
@@ -81,7 +81,7 @@ struct ContentView: View {
         }
         
         logger.info("Opening Wikipedia for custom location: (\(latitude), \(longitude))")
-        wikipediaCoordinator.openWikipedia(
+        wikipediaService.openWikipedia(
             latitude: latitude,
             longitude: longitude
         )
@@ -102,5 +102,5 @@ struct ContentView: View {
             )
         )
     )
-    .environmentObject(WikipediaCoordinator())
+    .environmentObject(WikipediaService())
 }

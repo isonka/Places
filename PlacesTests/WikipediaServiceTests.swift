@@ -1,5 +1,5 @@
 //
-//  WikipediaCoordinatorTests.swift
+//  WikipediaServiceTests.swift
 //  PlacesTests
 //
 //  Created by Onur Karsli on 23/10/2025.
@@ -9,18 +9,18 @@ import XCTest
 import Combine
 @testable import Places
 
-final class WikipediaCoordinatorTests: XCTestCase {
-    var coordinator: WikipediaCoordinator!
+final class WikipediaServiceTests: XCTestCase {
+    var service: WikipediaService!
     var cancellables: Set<AnyCancellable>!
     
     override func setUp() {
         super.setUp()
-        coordinator = WikipediaCoordinator()
+        service = WikipediaService()
         cancellables = Set<AnyCancellable>()
     }
     
     override func tearDown() {
-        coordinator = nil
+        service = nil
         cancellables = nil
         super.tearDown()
     }
@@ -28,14 +28,14 @@ final class WikipediaCoordinatorTests: XCTestCase {
     func testOpenWikipediaWithValidCoordinates() {
         let latitude = 37.7749
         let longitude = -122.4194
-        coordinator.openWikipedia(latitude: latitude, longitude: longitude)
+        service.openWikipedia(latitude: latitude, longitude: longitude)
         XCTAssertTrue(true)
     }
     
     func testOpenCustomLocationWithValidStringCoordinates() {
         let latitude = "37.7749"
         let longitude = "-122.4194"
-        coordinator.openCustomLocation(latitude: latitude, longitude: longitude)
+        service.openCustomLocation(latitude: latitude, longitude: longitude)
         XCTAssertTrue(true)
     }
     
@@ -48,7 +48,7 @@ final class WikipediaCoordinatorTests: XCTestCase {
             ("", ""),                 // Empty strings
         ]
         for (lat, lon) in testCases {
-            coordinator.openCustomLocation(latitude: lat, longitude: lon)
+            service.openCustomLocation(latitude: lat, longitude: lon)
             XCTAssertTrue(true)
         }
     }
@@ -59,14 +59,14 @@ final class WikipediaCoordinatorTests: XCTestCase {
             ("-90.0", "-180.0"),   // Minimum valid values
         ]
         for (lat, lon) in testCases {
-            coordinator.openCustomLocation(latitude: lat, longitude: lon)
+            service.openCustomLocation(latitude: lat, longitude: lon)
             XCTAssertTrue(true)
         }
     }    
     
     func testWikipediaErrorCanBeSet() {
         let expectation = XCTestExpectation(description: "Error should be published")
-        coordinator.$wikipediaError
+        service.$wikipediaError
             .dropFirst()
             .sink { error in
                 if error != nil {
@@ -74,9 +74,9 @@ final class WikipediaCoordinatorTests: XCTestCase {
                 }
             }
             .store(in: &cancellables)
-        coordinator.wikipediaError = .wikipediaNotInstalled { }
+        service.wikipediaError = .wikipediaNotInstalled { }
         wait(for: [expectation], timeout: 1.0)
-        XCTAssertNotNil(coordinator.wikipediaError)
-        XCTAssertEqual(coordinator.wikipediaError?.title, "Wikipedia App Required")
+        XCTAssertNotNil(service.wikipediaError)
+        XCTAssertEqual(service.wikipediaError?.title, "Wikipedia App Required")
     }
 }

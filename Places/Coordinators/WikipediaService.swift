@@ -2,13 +2,13 @@ import UIKit
 import SwiftUI
 import Combine
 
-class WikipediaCoordinator: ObservableObject {
+class WikipediaService: ObservableObject {
     @Published var wikipediaError: UserFacingError? = nil
     private let logger: LoggingServiceProtocol
     
     init(logger: LoggingServiceProtocol = LoggingService.shared) {
         self.logger = logger
-        logger.debug("WikipediaCoordinator initialized")
+        logger.debug("WikipediaService initialized")
     }
     
     func openWikipedia(latitude: Double, longitude: Double) {
