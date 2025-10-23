@@ -105,5 +105,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared)))))
+    ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService())))))
 }

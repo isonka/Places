@@ -4,7 +4,7 @@ protocol LocationServiceProtocol {
     func fetchLocations() async throws -> [Location]
 }
 
-class LocationService: LocationServiceProtocol {
+struct LocationService: LocationServiceProtocol {
     private let urlString: String
     private let networkManager: NetworkManagerProtocol
     

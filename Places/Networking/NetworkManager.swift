@@ -12,7 +12,7 @@ protocol NetworkManagerProtocol {
                                          body: Data?) async throws -> T
 }
 
-final class NetworkManager: NetworkManagerProtocol {
+struct NetworkManager: NetworkManagerProtocol {
     private let connectivityService: ConnectivityService
     
     init(connectivityService: ConnectivityService) {
@@ -23,7 +23,7 @@ final class NetworkManager: NetworkManagerProtocol {
                              method: HTTPMethod = .GET,
                              headers: [String: String]? = nil,
                              body: Data? = nil) async throws -> T {
-        guard connectivityService.isConnected else {
+        guard await connectivityService.checkConnection() else {
             throw NetworkError.noConnection
         }
         guard let url = URL(string: urlString) else {

@@ -6,12 +6,29 @@
 //
 
 import Foundation
+import Combine
 @testable import Places
 
-class MockConnectivityService: ConnectivityServiceProtocol {
+final class MockConnectivityService: ConnectivityServiceProtocol {
     var isConnected: Bool
-    init(isConnected: Bool) {
+    private var subject = CurrentValueSubject<Bool, Never>(true)
+    
+    var isConnectedPublisher: AnyPublisher<Bool, Never> {
+        subject.eraseToAnyPublisher()
+    }
+    
+    init(isConnected: Bool = true) {
         self.isConnected = isConnected
+        subject.send(isConnected)
+    }
+    
+    func checkConnection() async -> Bool {
+        return isConnected
+    }
+    
+    func setConnected(_ connected: Bool) {
+        isConnected = connected
+        subject.send(connected)
     }
 }
 
@@ -32,7 +49,7 @@ class MockNetworkManager: NetworkManagerProtocol {
     var connectivityService: ConnectivityServiceProtocol = MockConnectivityService(isConnected: true)
     var statusCode: Int? = nil // New property to simulate status error
     func fetch<T: Decodable>(from urlString: String, method: HTTPMethod = .GET, headers: [String: String]? = nil, body: Data? = nil) async throws -> T {
-        if !connectivityService.isConnected {
+        if !(await connectivityService.checkConnection()) {
             throw NetworkError.noConnection
         }
         if let code = statusCode {

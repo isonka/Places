@@ -11,10 +11,22 @@ import Combine
 @main
 struct PlacesApp: App {
     let wikipediaCoordinator = WikipediaCoordinator()
+    let connectivityService = ConnectivityService()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared)))))
-                .environmentObject(wikipediaCoordinator)
+            ContentView(
+                viewModel: PlacesViewModel(
+                    locationRepository: LocationRepository(
+                        locationService: LocationService(
+                            networkManager: NetworkManager(
+                                connectivityService: connectivityService
+                            )
+                        )
+                    )
+                )
+            )
+            .environmentObject(wikipediaCoordinator)
         }
     }
 }
