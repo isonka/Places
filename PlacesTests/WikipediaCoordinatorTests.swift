@@ -64,18 +64,19 @@ final class WikipediaCoordinatorTests: XCTestCase {
         }
     }    
     
-    func testShowWikipediaAlertCanBeSet() {
-        let expectation = XCTestExpectation(description: "Alert should be published")
-        coordinator.$showWikipediaAlert
+    func testWikipediaErrorCanBeSet() {
+        let expectation = XCTestExpectation(description: "Error should be published")
+        coordinator.$wikipediaError
             .dropFirst()
-            .sink { shown in
-                if shown {
+            .sink { error in
+                if error != nil {
                     expectation.fulfill()
                 }
             }
             .store(in: &cancellables)
-        coordinator.showWikipediaAlert = true
+        coordinator.wikipediaError = .wikipediaNotInstalled { }
         wait(for: [expectation], timeout: 1.0)
-        XCTAssertTrue(coordinator.showWikipediaAlert)
+        XCTAssertNotNil(coordinator.wikipediaError)
+        XCTAssertEqual(coordinator.wikipediaError?.title, "Wikipedia App Required")
     }
 }

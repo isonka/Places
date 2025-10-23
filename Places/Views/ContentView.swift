@@ -10,12 +10,15 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 0) {
+                if let error = viewModel.userFacingError {
+                    ErrorBannerView(error: error)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
                 if viewModel.isLoading {
                     ProgressView("Loading locations...")
-                } else if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
                         Section(header: Text("Places")) {
@@ -87,10 +90,12 @@ struct ContentView: View {
                     }
                 }
             }
-            .alert(isPresented: $wikipediaCoordinator.showWikipediaAlert) {
-                Alert(title: Text("Wikipedia app not found"), message: Text("Please install the Wikipedia app to view locations."), dismissButton: .default(Text("OK")))
-            }
+            .animation(.easeInOut, value: viewModel.userFacingError?.id)
             .navigationTitle("Places")
+            .sheet(item: $wikipediaCoordinator.wikipediaError) { error in
+                WikipediaErrorSheet(error: error)
+                    .presentationDetents([.medium])
+            }
         }.onAppear() {
             Task {
                 await viewModel.loadLocations()

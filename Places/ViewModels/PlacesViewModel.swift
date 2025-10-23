@@ -8,7 +8,9 @@ class PlacesViewModel: ObservableObject {
     @Published var isLoading: Bool = true
     @Published var customLatitude: String = ""
     @Published var customLongitude: String = ""
-    @Published var errorMessage: String? = nil
+    @Published var userFacingError: UserFacingError? = nil
+    @Published var isShowingCachedData: Bool = false
+    @Published var lastSuccessfulFetch: Date? = nil
     @Published var latitudeError: String? = nil
     @Published var longitudeError: String? = nil
     
@@ -27,20 +29,42 @@ class PlacesViewModel: ObservableObject {
     
     func loadLocations() async {
         isLoading = true
-        errorMessage = nil
+        userFacingError = nil
+        isShowingCachedData = false
+        
         let result = await locationRepository.fetchLocations()
+        
         switch result {
         case .success(let locs):
             locations = locs
-            errorMessage = nil
+            userFacingError = nil
+            isShowingCachedData = false
+            lastSuccessfulFetch = Date()
+            
         case .failureWithCache(let error, let cached):
             locations = cached
-            errorMessage = "Network error: \(error.localizedDescription) Showing cached data."
+            isShowingCachedData = true
+            userFacingError = .usingCachedData(lastUpdated: lastSuccessfulFetch)
+                        
+            print("⚠️ Network error (showing cache): \(error.localizedDescription)")
+            
         case .failure(let error):
             locations = []
-            errorMessage = error.localizedDescription
+            isShowingCachedData = false
+            userFacingError = .from(error) { [weak self] in
+                Task { @MainActor in
+                    await self?.loadLocations()
+                }
+            }
+            
+            print("❌ Network error (no cache): \(error.localizedDescription)")
         }
+        
         isLoading = false
+    }
+    
+    func retry() async {
+        await loadLocations()
     }
     
     private func setupValidation() {
@@ -55,11 +79,19 @@ class PlacesViewModel: ObservableObject {
     }
     
     private func validateLatitude(_ value: String) {
-        latitudeError = LocationValidator.validateLatitude(value)
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        if trimmed != value && !value.isEmpty {
+            customLatitude = trimmed
+        }
+        latitudeError = LocationValidator.validateLatitude(trimmed)
     }
     
     private func validateLongitude(_ value: String) {
-        longitudeError = LocationValidator.validateLongitude(value)
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        if trimmed != value && !value.isEmpty {
+            customLongitude = trimmed
+        }
+        longitudeError = LocationValidator.validateLongitude(trimmed)
     }
     
     func validateCustomLocation() {

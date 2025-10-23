@@ -16,7 +16,8 @@ final class PlacesViewModelTests: XCTestCase {
     func testInitialState() {
         XCTAssertTrue(viewModel.locations.isEmpty)
         XCTAssertTrue(viewModel.isLoading)
-        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNil(viewModel.userFacingError)
+        XCTAssertFalse(viewModel.isShowingCachedData)
         XCTAssertEqual(viewModel.customLatitude, "")
         XCTAssertEqual(viewModel.customLongitude, "")
     }
@@ -28,7 +29,9 @@ final class PlacesViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
         XCTAssertEqual(viewModel.locations.first?.name, "Test Place")
-        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNil(viewModel.userFacingError)
+        XCTAssertFalse(viewModel.isShowingCachedData)
+        XCTAssertNotNil(viewModel.lastSuccessfulFetch)
     }
     
     func testLoadLocationsNetworkError() async throws {
@@ -36,7 +39,10 @@ final class PlacesViewModelTests: XCTestCase {
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
-        XCTAssertEqual(viewModel.errorMessage!, "Network error: \(NetworkError.noConnection.localizedDescription) Showing cached data.")
+        XCTAssertNotNil(viewModel.userFacingError)
+        XCTAssertTrue(viewModel.isShowingCachedData)
+        XCTAssertEqual(viewModel.userFacingError?.title, "Showing Saved Locations")
+        XCTAssertEqual(viewModel.userFacingError?.severity, .warning)
     }
     
     func testLoadLocationsOtherError() async throws {
@@ -44,7 +50,8 @@ final class PlacesViewModelTests: XCTestCase {
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
-        XCTAssertEqual(viewModel.errorMessage!, "Network error: \(NetworkError.badURL.localizedDescription) Showing cached data.")
+        XCTAssertNotNil(viewModel.userFacingError)
+        XCTAssertTrue(viewModel.isShowingCachedData)
     }
     
     func testCustomLocationValidation() {
@@ -75,7 +82,7 @@ final class PlacesViewModelTests: XCTestCase {
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertTrue(viewModel.locations.isEmpty)
-        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNil(viewModel.userFacingError)
     }
     
     func testLoadLocationsWithNilNames() async throws {
@@ -89,6 +96,7 @@ final class PlacesViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.locations.count, 2)
         XCTAssertNil(viewModel.locations[0].name)
         XCTAssertEqual(viewModel.locations[1].name, "Valid Name")
+        XCTAssertNil(viewModel.userFacingError)
     }
     
     func testLoadLocationsWithDuplicates() async throws {
@@ -130,12 +138,12 @@ final class PlacesViewModelTests: XCTestCase {
     func testLoadLocationsAfterPreviousError() async throws {
         mockService.errorToThrow = NetworkError.noConnection
         await viewModel.loadLocations()
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.userFacingError)
         mockService.errorToThrow = nil
         mockService.result = [Location(name: "Success", lat: 41.2, long: 29.0)]
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertNil(viewModel.errorMessage) // Error should be cleared
+        XCTAssertNil(viewModel.userFacingError) // Error should be cleared
         XCTAssertEqual(viewModel.locations.count, 1)
     }
     
@@ -147,7 +155,7 @@ final class PlacesViewModelTests: XCTestCase {
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 1000)
-        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNil(viewModel.userFacingError)
     }
     
     func testCustomLocationValidationWithEmptyLatitude() {
@@ -186,8 +194,8 @@ final class PlacesViewModelTests: XCTestCase {
         viewModel.customLatitude = " 45.0 "
         viewModel.customLongitude = "120.0"
         viewModel.validateCustomLocation()
-        XCTAssertFalse(viewModel.isCustomLocationValid)
-        XCTAssertNotNil(viewModel.latitudeError)
+        XCTAssertTrue(viewModel.isCustomLocationValid)
+        XCTAssertNil(viewModel.latitudeError)
     }
     
     func testLocationWithExtremelySmallCoordinates() async throws {
@@ -212,11 +220,11 @@ final class PlacesViewModelTests: XCTestCase {
     func testErrorMessageClearedOnSuccessfulLoad() async throws {
         mockService.errorToThrow = NetworkError.noConnection
         await viewModel.loadLocations()
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.userFacingError)
         mockService.errorToThrow = nil
         mockService.result = [Location(name: "Test", lat: 41.2, long: 29.0)]
         await viewModel.loadLocations()
-        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNil(viewModel.userFacingError)
     }
     
     func testIsLoadingStateTransitions() async throws {

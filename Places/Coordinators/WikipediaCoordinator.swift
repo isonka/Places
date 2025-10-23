@@ -3,15 +3,32 @@ import SwiftUI
 import Combine
 
 class WikipediaCoordinator: ObservableObject {
-    @Published var showWikipediaAlert: Bool = false
+    @Published var wikipediaError: UserFacingError? = nil
     
     func openWikipedia(latitude: Double, longitude: Double) {
         let urlString = "wikipedia://places?location=\(latitude),\(longitude)"
-        guard let url = URL(string: urlString) else { return }
+        guard let url = URL(string: urlString) else {
+            print("❌ Invalid Wikipedia URL: \(urlString)")
+            return
+        }
+        
         if UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
+            UIApplication.shared.open(url) { success in
+                if !success {
+                    print("❌ Failed to open Wikipedia app")
+                }
+            }
         } else {
-            showWikipediaAlert = true
+            wikipediaError = .wikipediaNotInstalled { [weak self] in
+                self?.openAppStore()
+            }
+        }
+    }
+    
+    private func openAppStore() {
+        let appStoreURL = "https://apps.apple.com/app/wikipedia/id324715238"
+        if let url = URL(string: appStoreURL) {
+            UIApplication.shared.open(url)
         }
     }
     
