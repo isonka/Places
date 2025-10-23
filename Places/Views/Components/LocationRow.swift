@@ -69,8 +69,6 @@ struct LocationRow: View {
             .foregroundColor(.secondary.opacity(0.5))
     }
     
-    // MARK: - Helper Views
-    
     @ViewBuilder
     private func coordinateLabel(icon: String, value: String) -> some View {
         HStack(spacing: 4) {
@@ -84,9 +82,7 @@ struct LocationRow: View {
                 .monospacedDigit()
         }
     }
-    
-    // MARK: - Helpers
-    
+
     private func formatCoordinate(_ value: Double, isLatitude: Bool) -> String {
         let direction: String
         if isLatitude {

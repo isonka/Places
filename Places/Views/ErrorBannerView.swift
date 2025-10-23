@@ -106,7 +106,7 @@ struct ErrorBannerView: View {
     VStack {
         ErrorBannerView(
             error: .noConnection {
-                print("Retry tapped")
+                // Preview action
             }
         )
         
@@ -128,7 +128,7 @@ struct ErrorBannerView: View {
     VStack {
         ErrorBannerView(
             error: .wikipediaNotInstalled {
-                print("Install tapped")
+                // Preview action
             }
         )
         

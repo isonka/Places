@@ -14,21 +14,38 @@ final class LocationRepository: LocationRepositoryProtocol {
     private let cacheKey = "Locations"
     private let locationService: LocationServiceProtocol
     private let cacheManager: CacheManagerProtocol
+    private let logger: LoggingServiceProtocol
     
-    init(locationService: LocationServiceProtocol, cacheManager: CacheManagerProtocol = CacheManager()) {
+    init(
+        locationService: LocationServiceProtocol,
+        cacheManager: CacheManagerProtocol = CacheManager(),
+        logger: LoggingServiceProtocol = LoggingService.shared
+    ) {
         self.locationService = locationService
         self.cacheManager = cacheManager
+        self.logger = logger
+        logger.debug("LocationRepository initialized")
     }
     
     func fetchLocations() async -> FetchLocationsResult {
+        logger.info("Fetching locations from service")
+        
         do {
             let locations = try await locationService.fetchLocations()
+            logger.info("Successfully fetched \(locations.count) locations from service")
+            
             await cacheManager.save(locations, forKey: cacheKey)
+            logger.debug("Locations cached successfully")
+            
             return .success(locations)
         } catch {
+            logger.warning("Failed to fetch from service: \(error.localizedDescription)")
+            
             if let cached = await cacheManager.load([Location].self, forKey: cacheKey) {
+                logger.info("Returning \(cached.count) cached locations as fallback")
                 return .failureWithCache(error: error, cached: cached)
             } else {
+                logger.error("No cached data available, returning failure")
                 return .failure(error: error)
             }
         }

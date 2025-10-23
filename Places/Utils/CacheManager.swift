@@ -8,9 +8,12 @@ protocol CacheManagerProtocol: Sendable {
 
 struct CacheManager: CacheManagerProtocol {
     private let queue: DispatchQueue
+    private let logger: LoggingServiceProtocol
     
-    init(qos: DispatchQoS = .userInitiated) {
+    init(qos: DispatchQoS = .userInitiated, logger: LoggingServiceProtocol = LoggingService.shared) {
         self.queue = DispatchQueue(label: "com.places.cacheManager", qos: qos)
+        self.logger = logger
+        logger.debug("CacheManager initialized")
     }
     
     func save<T: Codable & Sendable>(_ object: T, forKey key: String) async {
@@ -20,8 +23,9 @@ struct CacheManager: CacheManagerProtocol {
                     let url = self.cacheFileURL(for: key)
                     let data = try JSONEncoder().encode(object)
                     try data.write(to: url, options: .atomic)
+                    self.logger.debug("Successfully cached object for key: \(key)")
                 } catch {
-                    print("❌ Failed to cache object for key \(key): \(error)")
+                    self.logger.error("Failed to cache object for key \(key): \(error.localizedDescription)")
                 }
                 continuation.resume()
             }
@@ -34,15 +38,17 @@ struct CacheManager: CacheManagerProtocol {
                 let url = self.cacheFileURL(for: key)
                 
                 guard let data = try? Data(contentsOf: url) else {
+                    self.logger.debug("No cached data found for key: \(key)")
                     continuation.resume(returning: nil)
                     return
                 }
                 
                 do {
                     let decoded = try JSONDecoder().decode(type, from: data)
+                    self.logger.info("Successfully loaded cached data for key: \(key)")
                     continuation.resume(returning: decoded)
                 } catch {
-                    print("❌ Failed to decode cache for key \(key): \(error)")
+                    self.logger.error("Failed to decode cache for key \(key): \(error.localizedDescription)")
                     try? FileManager.default.removeItem(at: url)
                     continuation.resume(returning: nil)
                 }
@@ -60,11 +66,15 @@ struct CacheManager: CacheManagerProtocol {
                         includingPropertiesForKeys: nil
                     )
                     
+                    let removedCount = files.filter { $0.pathExtension == "json" }.count
+                    
                     for file in files where file.pathExtension == "json" {
                         try? FileManager.default.removeItem(at: file)
                     }
+                    
+                    self.logger.info("Cache cleared: \(removedCount) file(s) removed")
                 } catch {
-                    print("❌ Failed to clear cache: \(error)")
+                    self.logger.error("Failed to clear cache: \(error.localizedDescription)")
                 }
                 continuation.resume()
             }

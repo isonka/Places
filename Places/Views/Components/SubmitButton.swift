@@ -5,10 +5,7 @@ struct SubmitButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: {
-            print("🟢 SubmitButton action called")
-            action()
-        }) {
+        Button(action: action) {
             buttonContent
         }
         .buttonStyle(.plain)
@@ -64,14 +61,14 @@ struct SubmitButton: View {
 
 #Preview("Enabled") {
     SubmitButton(isEnabled: true) {
-        print("Submit tapped")
+        // Preview action
     }
     .padding()
 }
 
 #Preview("Disabled") {
     SubmitButton(isEnabled: false) {
-        print("Submit tapped")
+        // Preview action
     }
     .padding()
 }

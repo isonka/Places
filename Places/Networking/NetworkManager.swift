@@ -14,21 +14,32 @@ protocol NetworkManagerProtocol {
 
 struct NetworkManager: NetworkManagerProtocol {
     private let connectivityService: ConnectivityService
+    private let logger: LoggingServiceProtocol
     
-    init(connectivityService: ConnectivityService) {
+    init(
+        connectivityService: ConnectivityService,
+        logger: LoggingServiceProtocol = LoggingService.shared
+    ) {
         self.connectivityService = connectivityService
+        self.logger = logger
     }
     
     func fetch<T: Decodable>(from urlString: String,
                              method: HTTPMethod = .GET,
                              headers: [String: String]? = nil,
                              body: Data? = nil) async throws -> T {
+        logger.debug("Starting \(method.rawValue) request to: \(urlString)")
+        
         guard await connectivityService.checkConnection() else {
+            logger.warning("No network connection available")
             throw NetworkError.noConnection
         }
+        
         guard let url = URL(string: urlString) else {
+            logger.error("Invalid URL: \(urlString)")
             throw NetworkError.badURL
         }
+        
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         if let headers = headers {
@@ -37,18 +48,29 @@ struct NetworkManager: NetworkManagerProtocol {
             }
         }
         request.httpBody = body
+        
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                throw NetworkError.status(httpResponse.statusCode)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                logger.debug("Received HTTP \(httpResponse.statusCode) from \(urlString)")
+                
+                if !(200...299).contains(httpResponse.statusCode) {
+                    logger.error("HTTP error \(httpResponse.statusCode) for \(urlString)")
+                    throw NetworkError.status(httpResponse.statusCode)
+                }
             }
+            
             do {
                 let decoded = try JSONDecoder().decode(T.self, from: data)
+                logger.info("Successfully decoded response from \(urlString)")
                 return decoded
             } catch {
+                logger.error("Decoding failed for \(urlString): \(error.localizedDescription)")
                 throw NetworkError.decodingFailed(error)
             }
         } catch {
+            logger.error("Request failed for \(urlString): \(error.localizedDescription)")
             throw NetworkError.requestFailed(error)
         }
     }

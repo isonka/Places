@@ -15,6 +15,7 @@ class PlacesViewModel: ObservableObject {
     @Published var longitudeError: String? = nil
     
     private let locationRepository: LocationRepositoryProtocol
+    private let logger: LoggingServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     var isCustomLocationValid: Bool {
@@ -22,12 +23,18 @@ class PlacesViewModel: ObservableObject {
             !customLatitude.isEmpty && !customLongitude.isEmpty
     }
     
-    init(locationRepository: LocationRepositoryProtocol) {
+    init(
+        locationRepository: LocationRepositoryProtocol,
+        logger: LoggingServiceProtocol = LoggingService.shared
+    ) {
         self.locationRepository = locationRepository
+        self.logger = logger
         setupValidation()
+        logger.info("PlacesViewModel initialized")
     }
     
     func loadLocations() async {
+        logger.info("Starting to load locations")
         isLoading = true
         userFacingError = nil
         isShowingCachedData = false
@@ -36,19 +43,20 @@ class PlacesViewModel: ObservableObject {
         
         switch result {
         case .success(let locs):
+            logger.info("Successfully loaded \(locs.count) locations")
             locations = locs
             userFacingError = nil
             isShowingCachedData = false
             lastSuccessfulFetch = Date()
             
         case .failureWithCache(let error, let cached):
+            logger.warning("Network error, using \(cached.count) cached locations: \(error.localizedDescription)")
             locations = cached
             isShowingCachedData = true
             userFacingError = .usingCachedData(lastUpdated: lastSuccessfulFetch)
-                        
-            print("⚠️ Network error (showing cache): \(error.localizedDescription)")
             
         case .failure(let error):
+            logger.error("Failed to load locations, no cache available: \(error.localizedDescription)")
             locations = []
             isShowingCachedData = false
             userFacingError = .from(error) { [weak self] in
@@ -56,11 +64,10 @@ class PlacesViewModel: ObservableObject {
                     await self?.loadLocations()
                 }
             }
-            
-            print("❌ Network error (no cache): \(error.localizedDescription)")
         }
         
         isLoading = false
+        logger.debug("Loading complete. Is showing cached data: \(isShowingCachedData)")
     }
     
     func retry() async {
@@ -97,5 +104,9 @@ class PlacesViewModel: ObservableObject {
     func validateCustomLocation() {
         validateLatitude(customLatitude)
         validateLongitude(customLongitude)
+        
+        if isCustomLocationValid {
+            logger.debug("Custom location validated: (\(customLatitude), \(customLongitude))")
+        }
     }
 }

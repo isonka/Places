@@ -29,8 +29,8 @@ struct LocationsListView: View {
                 Location(name: nil, lat: 41.0082, long: 28.9784)
             ],
             isLoading: false,
-            onLocationTap: { location in
-                print("Tapped: \(location.name ?? "Unknown")")
+            onLocationTap: { _ in
+                // Preview action
             }
         )
     }

@@ -101,7 +101,7 @@ struct FeatureRow: View {
 #Preview {
     WikipediaErrorSheet(
         error: .wikipediaNotInstalled {
-            print("Get Wikipedia tapped")
+            // Preview action
         }
     )
 }

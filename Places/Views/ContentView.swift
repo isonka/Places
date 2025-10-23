@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel: PlacesViewModel
     @EnvironmentObject var wikipediaCoordinator: WikipediaCoordinator
+    private let logger = LoggingService.shared
     
     init(viewModel: PlacesViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -70,17 +71,16 @@ struct ContentView: View {
     }
     
     private func handleCustomLocationSubmit() {
-        print("🔵 Submit tapped - Valid: \(viewModel.isCustomLocationValid)")
-        print("🔵 Lat: '\(viewModel.customLatitude)', Long: '\(viewModel.customLongitude)'")
+        logger.debug("Custom location submit - Valid: \(viewModel.isCustomLocationValid), Lat: '\(viewModel.customLatitude)', Long: '\(viewModel.customLongitude)'")
         
         guard viewModel.isCustomLocationValid,
               let latitude = Double(viewModel.customLatitude),
               let longitude = Double(viewModel.customLongitude) else {
-            print("❌ Validation failed or couldn't convert to Double")
+            logger.warning("Custom location validation failed or couldn't convert to Double")
             return
         }
         
-        print("✅ Opening Wikipedia with lat: \(latitude), long: \(longitude)")
+        logger.info("Opening Wikipedia for custom location: (\(latitude), \(longitude))")
         wikipediaCoordinator.openWikipedia(
             latitude: latitude,
             longitude: longitude

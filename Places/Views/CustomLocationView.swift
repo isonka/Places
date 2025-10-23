@@ -83,7 +83,7 @@ struct CustomLocationView: View {
             longitudeError: nil,
             isValid: true
         ) {
-            print("Submit tapped")
+            // Preview action
         }
     }
 }
@@ -97,7 +97,7 @@ struct CustomLocationView: View {
             longitudeError: "Longitude must be between -180 and 180.",
             isValid: false
         ) {
-            print("Submit tapped")
+            // Preview action
         }
     }
 }
@@ -111,7 +111,7 @@ struct CustomLocationView: View {
             longitudeError: nil,
             isValid: false
         ) {
-            print("Submit tapped")
+            // Preview action
         }
     }
 }
