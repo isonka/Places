@@ -11,6 +11,7 @@ protocol LocationRepositoryProtocol {
 }
 
 final class LocationRepository: LocationRepositoryProtocol {
+    private let cacheKey = "Locations"
     private let locationService: LocationServiceProtocol
     private let cacheManager: CacheManagerProtocol
     
@@ -21,13 +22,11 @@ final class LocationRepository: LocationRepositoryProtocol {
     
     func fetchLocations() async -> FetchLocationsResult {
         do {
-            let locations: [Location] = try await locationService.fetchLocations()
-            // Save cache in background
-            await cacheManager.save(locations, forKey: "Locations")
+            let locations = try await locationService.fetchLocations()
+            await cacheManager.save(locations, forKey: cacheKey)
             return .success(locations)
         } catch {
-            // Load from cache on error
-            if let cached: [Location] = await cacheManager.load([Location].self, forKey: "Locations") {
+            if let cached = await cacheManager.load([Location].self, forKey: cacheKey) {
                 return .failureWithCache(error: error, cached: cached)
             } else {
                 return .failure(error: error)

@@ -1,10 +1,10 @@
 import Foundation
 
-nonisolated struct LocationsResponse: Codable {
+nonisolated struct LocationsResponse: Codable, Sendable {
     let locations: [Location]
 }
 
-nonisolated struct Location: Codable, Identifiable {
+nonisolated struct Location: Codable, Identifiable, Sendable {
     let name: String?
     let lat: Double
     let long: Double
