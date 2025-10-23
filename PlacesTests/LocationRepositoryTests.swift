@@ -1,10 +1,3 @@
-//
-//  LocationRepositoryTests.swift
-//  PlacesTests
-//
-//  Created by Onur Karsli on 23/10/2025.
-//
-
 import XCTest
 @testable import Places
 

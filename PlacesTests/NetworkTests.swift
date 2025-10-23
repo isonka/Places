@@ -1,10 +1,3 @@
-//
-//  NetworkTests.swift
-//  PlacesTests
-//
-//  Created by Onur Karsli on 22/10/2025.
-//
-
 import XCTest
 @testable import Places
 

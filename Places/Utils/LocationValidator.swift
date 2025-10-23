@@ -30,8 +30,20 @@ struct LocationValidator {
     typealias ValidationRule = (String, CoordinateType) -> String?
     
     static let coordinateRules: [ValidationRule] = [
+        { value, type in
+            value.trimmingCharacters(in: .whitespaces) != value ? "\(type.name) cannot contain whitespace." : nil
+        },
         { value, _ in value.contains(",") ? "Decimals must use . instead of ," : nil },
+        { value, type in
+            value.filter({ $0 == "." }).count > 1 ? "\(type.name) cannot have multiple decimal points." : nil
+        },
         { value, type in Double(value) == nil ? "\(type.name) must be a valid number." : nil },
+        { value, type in
+            guard let number = Double(value) else { return nil }
+            if number.isInfinite { return "\(type.name) cannot be infinity." }
+            if number.isNaN { return "\(type.name) cannot be NaN." }
+            return nil
+        },
         { value, type in
             guard let number = Double(value) else { return nil }
             return type.range.contains(number) ? nil : type.rangeError

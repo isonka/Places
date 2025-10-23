@@ -1,10 +1,3 @@
-//
-//  CacheManager.swift
-//  Places
-//
-//  Created by Onur Karsli on 23/10/2025.
-//
-
 import Foundation
 
 protocol CacheManagerProtocol {
