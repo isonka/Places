@@ -47,21 +47,31 @@ struct ContentView: View {
                             VStack {
                                 TextField("Latitude", text: $viewModel.customLatitude)
                                     .keyboardType(.decimalPad)
-                                    .accessibilityLabel("Custom latitude input")
+                                    .accessibilityLabel("Latitude")
+                                    .accessibilityHint("Enter a latitude value between -90 and 90")
+                                    .accessibilityValue(viewModel.customLatitude.isEmpty ? "Empty" : viewModel.customLatitude)
+                                    .accessibilityIdentifier("latitudeTextField")
                                     .padding()
                                 if let latitudeError = viewModel.latitudeError {
                                     Text(latitudeError)
                                         .foregroundColor(.red)
                                         .font(.caption)
+                                        .accessibilityAddTraits(.isStaticText)
+                                        .accessibilityLabel("Latitude error: \(latitudeError)")
                                 }
                                 TextField("Longitude", text: $viewModel.customLongitude)
                                     .keyboardType(.decimalPad)
-                                    .accessibilityLabel("Custom longitude input")
+                                    .accessibilityLabel("Longitude")
+                                    .accessibilityHint("Enter a longitude value between -180 and 180")
+                                    .accessibilityValue(viewModel.customLongitude.isEmpty ? "Empty" : viewModel.customLongitude)
+                                    .accessibilityIdentifier("longitudeTextField")
                                     .padding()
                                 if let longitudeError = viewModel.longitudeError {
                                     Text(longitudeError)
                                         .foregroundColor(.red)
                                         .font(.caption)
+                                        .accessibilityAddTraits(.isStaticText)
+                                        .accessibilityLabel("Longitude error: \(longitudeError)")
                                 }
                                 Button("Open Wikipedia for Custom Location") {
                                     if viewModel.isCustomLocationValid {
@@ -73,9 +83,12 @@ struct ContentView: View {
                                 }
                                 .disabled(!viewModel.isCustomLocationValid)
                                 .padding()
+                                .foregroundColor(.white)
                                 .background(viewModel.isCustomLocationValid ? Color.blue : Color.gray)
                                 .cornerRadius(12)
                                 .accessibilityLabel("Open Wikipedia for custom location")
+                                .accessibilityHint(viewModel.isCustomLocationValid ? "Double tap to open Wikipedia" : "Enter valid coordinates first")
+                                .accessibilityIdentifier("openWikipediaButton")
                             }
                         }
                     }
@@ -94,5 +107,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared))))) 
+    ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService.shared)))))
 }
