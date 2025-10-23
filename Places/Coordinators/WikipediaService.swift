@@ -2,7 +2,13 @@ import UIKit
 import SwiftUI
 import Combine
 
-class WikipediaService: ObservableObject {
+protocol WikipediaServiceProtocol: ObservableObject {
+    var wikipediaError: UserFacingError? { get set }
+    func openWikipedia(latitude: Double, longitude: Double)
+    func openCustomLocation(latitude: String, longitude: String)
+}
+
+class WikipediaService: WikipediaServiceProtocol {
     @Published var wikipediaError: UserFacingError? = nil
     private let logger: LoggingServiceProtocol
     

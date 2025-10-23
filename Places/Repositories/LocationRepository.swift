@@ -1,12 +1,12 @@
 import Foundation
 
-enum FetchLocationsResult {
+enum FetchLocationsResult: Sendable {
     case success([Location])
     case failureWithCache(error: Error, cached: [Location])
     case failure(error: Error)
 }
 
-protocol LocationRepositoryProtocol {
+protocol LocationRepositoryProtocol: Sendable {
     func fetchLocations() async -> FetchLocationsResult
 }
 

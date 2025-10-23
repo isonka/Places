@@ -5,7 +5,7 @@ enum HTTPMethod: String {
     case GET, POST, PUT, DELETE
 }
 
-protocol NetworkManagerProtocol {
+protocol NetworkManagerProtocol: Sendable {
     nonisolated func fetch<T: Decodable>(from urlString: String,
                                          method: HTTPMethod,
                                          headers: [String: String]?,
@@ -13,11 +13,11 @@ protocol NetworkManagerProtocol {
 }
 
 struct NetworkManager: NetworkManagerProtocol {
-    private let connectivityService: ConnectivityService
+    private let connectivityService: ConnectivityServiceProtocol
     private let logger: LoggingServiceProtocol
     
     init(
-        connectivityService: ConnectivityService,
+        connectivityService: ConnectivityServiceProtocol,
         logger: LoggingServiceProtocol = LoggingService.shared
     ) {
         self.connectivityService = connectivityService

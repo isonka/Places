@@ -1,6 +1,6 @@
 import Foundation
 
-protocol LocationServiceProtocol {
+protocol LocationServiceProtocol: Sendable {
     func fetchLocations() async throws -> [Location]
 }
 
@@ -8,7 +8,7 @@ struct LocationService: LocationServiceProtocol {
     private let urlString: String
     private let networkManager: NetworkManagerProtocol
     
-    init(urlString: String = "https://raw.githubusercontent.com/abnamrocoesd/assignment-ios/main/locations.json", networkManager: NetworkManagerProtocol) {
+    init(urlString: String = "https://raw.githubusercontent.com/abnamrocoesd/assignment-ios/main/locations.json", networkManager: NetworkManagerProtocol = NetworkManager(connectivityService: ConnectivityService())) {
         self.networkManager = networkManager
         self.urlString = urlString
     }
