@@ -34,37 +34,33 @@ struct ContentView: View {
     
     @ViewBuilder
     private var contentBody: some View {
-        if viewModel.isLoading {
-            loadingView
-        } else {
-            locationsList
-        }
-    }
-    
-    private var loadingView: some View {
-        ProgressView("Loading locations...")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    private var locationsList: some View {
         List {
-            LocationsListView(
-                locations: viewModel.locations,
-                onLocationTap: handleLocationTap
-            )
-            
-            CustomLocationView(
-                latitude: $viewModel.customLatitude,
-                longitude: $viewModel.customLongitude,
-                latitudeError: viewModel.latitudeError,
-                longitudeError: viewModel.longitudeError,
-                isValid: viewModel.isCustomLocationValid,
-                onSubmit: handleCustomLocationSubmit
-            )
+            locationsSection
+            customLocationSection
+        }
+        .refreshable {
+            await viewModel.loadLocations()
         }
     }
     
-    // MARK: - Actions
+    private var locationsSection: some View {
+        LocationsListView(
+            locations: viewModel.locations,
+            isLoading: viewModel.isLoading,
+            onLocationTap: handleLocationTap
+        )
+    }
+    
+    private var customLocationSection: some View {
+        CustomLocationView(
+            latitude: $viewModel.customLatitude,
+            longitude: $viewModel.customLongitude,
+            latitudeError: viewModel.latitudeError,
+            longitudeError: viewModel.longitudeError,
+            isValid: viewModel.isCustomLocationValid,
+            onSubmit: handleCustomLocationSubmit
+        )
+    }
     
     private func handleLocationTap(_ location: Location) {
         wikipediaCoordinator.openWikipedia(
