@@ -16,79 +16,7 @@ struct ContentView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 
-                if viewModel.isLoading {
-                    ProgressView("Loading locations...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                        Section(header: Text("Places")) {
-                            ForEach(viewModel.locations) { location in
-                                Button(action: {
-                                    wikipediaCoordinator.openWikipedia(latitude: location.lat, longitude: location.long)
-                                }) {
-                                    VStack(alignment: .leading) {
-                                        if let name = location.name {
-                                            Text(name)
-                                                .font(.headline)
-                                        }
-                                        Text("Latitude: \(location.lat), Longitude: \(location.long)")
-                                            .font(.subheadline)
-                                    }
-                                }
-                                .accessibilityLabel(location.name ?? "Unknown Location")
-                                .accessibilityHint("Opens Wikipedia for this location")
-                            }
-                        }
-                        Section(header: Text("Custom Location")) {
-                            VStack {
-                                TextField("Latitude", text: $viewModel.customLatitude)
-                                    .keyboardType(.decimalPad)
-                                    .accessibilityLabel("Latitude")
-                                    .accessibilityHint("Enter a latitude value between -90 and 90")
-                                    .accessibilityValue(viewModel.customLatitude.isEmpty ? "Empty" : viewModel.customLatitude)
-                                    .accessibilityIdentifier("latitudeTextField")
-                                    .padding()
-                                if let latitudeError = viewModel.latitudeError {
-                                    Text(latitudeError)
-                                        .foregroundColor(.red)
-                                        .font(.caption)
-                                        .accessibilityAddTraits(.isStaticText)
-                                        .accessibilityLabel("Latitude error: \(latitudeError)")
-                                }
-                                TextField("Longitude", text: $viewModel.customLongitude)
-                                    .keyboardType(.decimalPad)
-                                    .accessibilityLabel("Longitude")
-                                    .accessibilityHint("Enter a longitude value between -180 and 180")
-                                    .accessibilityValue(viewModel.customLongitude.isEmpty ? "Empty" : viewModel.customLongitude)
-                                    .accessibilityIdentifier("longitudeTextField")
-                                    .padding()
-                                if let longitudeError = viewModel.longitudeError {
-                                    Text(longitudeError)
-                                        .foregroundColor(.red)
-                                        .font(.caption)
-                                        .accessibilityAddTraits(.isStaticText)
-                                        .accessibilityLabel("Longitude error: \(longitudeError)")
-                                }
-                                Button("Open Wikipedia for Custom Location") {
-                                    if viewModel.isCustomLocationValid {
-                                        wikipediaCoordinator.openWikipedia(
-                                            latitude: Double(viewModel.customLatitude) ?? 0.0,
-                                            longitude: Double(viewModel.customLongitude) ?? 0.0
-                                        )
-                                    }
-                                }
-                                .disabled(!viewModel.isCustomLocationValid)
-                                .padding()
-                                .foregroundColor(.white)
-                                .background(viewModel.isCustomLocationValid ? Color.blue : Color.gray)
-                                .cornerRadius(12)
-                                .accessibilityLabel("Open Wikipedia for custom location")
-                                .accessibilityHint(viewModel.isCustomLocationValid ? "Double tap to open Wikipedia" : "Enter valid coordinates first")
-                                .accessibilityIdentifier("openWikipediaButton")
-                            }
-                        }
-                    }
-                }
+                contentBody
             }
             .animation(.easeInOut, value: viewModel.userFacingError?.id)
             .navigationTitle("Places")
@@ -96,14 +24,87 @@ struct ContentView: View {
                 WikipediaErrorSheet(error: error)
                     .presentationDetents([.medium])
             }
-        }.onAppear() {
+        }
+        .onAppear {
             Task {
                 await viewModel.loadLocations()
             }
         }
     }
+    
+    @ViewBuilder
+    private var contentBody: some View {
+        if viewModel.isLoading {
+            loadingView
+        } else {
+            locationsList
+        }
+    }
+    
+    private var loadingView: some View {
+        ProgressView("Loading locations...")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var locationsList: some View {
+        List {
+            LocationsListView(
+                locations: viewModel.locations,
+                onLocationTap: handleLocationTap
+            )
+            
+            CustomLocationView(
+                latitude: $viewModel.customLatitude,
+                longitude: $viewModel.customLongitude,
+                latitudeError: viewModel.latitudeError,
+                longitudeError: viewModel.longitudeError,
+                isValid: viewModel.isCustomLocationValid,
+                onSubmit: handleCustomLocationSubmit
+            )
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func handleLocationTap(_ location: Location) {
+        wikipediaCoordinator.openWikipedia(
+            latitude: location.lat,
+            longitude: location.long
+        )
+    }
+    
+    private func handleCustomLocationSubmit() {
+        print("🔵 Submit tapped - Valid: \(viewModel.isCustomLocationValid)")
+        print("🔵 Lat: '\(viewModel.customLatitude)', Long: '\(viewModel.customLongitude)'")
+        
+        guard viewModel.isCustomLocationValid,
+              let latitude = Double(viewModel.customLatitude),
+              let longitude = Double(viewModel.customLongitude) else {
+            print("❌ Validation failed or couldn't convert to Double")
+            return
+        }
+        
+        print("✅ Opening Wikipedia with lat: \(latitude), long: \(longitude)")
+        wikipediaCoordinator.openWikipedia(
+            latitude: latitude,
+            longitude: longitude
+        )
+    }
 }
 
+// MARK: - Preview
+
 #Preview {
-    ContentView(viewModel: PlacesViewModel(locationRepository: LocationRepository(locationService: LocationService(networkManager: NetworkManager(connectivityService: ConnectivityService())))))
+    ContentView(
+        viewModel: PlacesViewModel(
+            locationRepository: LocationRepository(
+                locationService: LocationService(
+                    networkManager: NetworkManager(
+                        connectivityService: ConnectivityService()
+                    )
+                )
+            )
+        )
+    )
+    .environmentObject(WikipediaCoordinator())
 }
