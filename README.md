@@ -51,7 +51,7 @@ A SwiftUI iOS app that displays locations and integrates with Wikipedia for loca
 2. Open `Places.xcodeproj` in Xcode
 3. Build and run (`⌘R`)
 
-No external dependencies - pure SwiftUI/UIKit.
+No external dependencies
 
 ## Testing
 
@@ -88,7 +88,7 @@ To test the full Wikipedia integration functionality:
 
 **Build from source**
    ```bash
-   git clone https://github.com/wikimedia/wikipedia-ios.git
+   git clone https://github.com/isonka/wikipedia-ios.git
    cd wikipedia-ios
    ./scripts/setup
    # Open Wikipedia.xcodeproj and run on simulator
