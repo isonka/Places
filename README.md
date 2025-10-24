@@ -56,33 +56,30 @@ No external dependencies
 ## Design Decisions
 
 ### Repository Pattern
-I added a `LocationRepository` to sit between the ViewModel and the raw services. The ViewModel was getting messy trying to coordinate network calls, cache fallbacks, and error handling all at once. Now the Repository handles that orchestration, and the ViewModel can focus on UI state.
+The `LocationRepository` sits between the ViewModel and services layer, handling the coordination of network calls, cache fallbacks, and error states. This keeps the ViewModel focused on UI state management while the Repository orchestrates data fetching logic (network → cache → error).
 
-Yes, it's an extra layer. For a simple app like this, you could argue it's overkill. But it makes testing much easier and keeps responsibilities clear.
+This adds an extra abstraction layer which could be considered unnecessary for a simple app, but it significantly improves testability and maintains clear separation of concerns.
+
 
 ### Caching Strategy
-Simple file-based cache using JSON in the Documents directory. When the network fails, we fall back to cached data. If a cache file gets corrupted somehow, we just delete it and move on.
+File-based cache using JSON stored in the Documents directory. When network requests fail, the app falls back to cached data. Corrupted cache files are automatically deleted to prevent crashes.
 
-I considered using CoreData or UserDefaults, but honestly? For a single JSON file, writing to disk is simpler and has zero dependencies. It won't scale to thousands of records, but for this use case it's perfect.
+Alternative approaches like CoreData or UserDefaults were considered, but for a single JSON file, direct file I/O is simpler with zero external dependencies. The approach doesn't scale well to large datasets, but it's appropriate for this use case.
 
 ### LocationValidator
-A dedicated class just to validate latitude/longitude might seem like overkill for two simple checks. And you'd be right to think that. But since both the ViewModel and WikipediaService need the same validation logic, I didn't want to duplicate it. Plus it made testing that logic much cleaner.
+A dedicated validator class for coordinate validation might seem excessive for just latitude/longitude checks. However, since both the ViewModel and WikipediaService require the same validation logic, extracting it avoids duplication and makes the logic independently testable.
 
-In a real project with just this one use case, I'd probably inline it. Here I wanted to show the pattern.
+In a production scenario with only this single use case, inline validation would likely be sufficient. The separate class demonstrates the pattern for when validation logic is shared across components.
 
 ### Protocol-Based Dependencies
-Everything's behind a protocol with an `AppDependencies` container to wire it up. Makes testing straightforward since you can swap in mocks easily.
+All services use protocol abstractions with an `AppDependencies` composition root for dependency injection. This makes testing straightforward by allowing mock implementations to be swapped in easily.
 
-The one exception: `LoggingService.shared` is a singleton. I know, I know. But logging is cross-cutting and doesn't affect business logic, so I kept it simple. Everything else is properly injected.
-
-More boilerplate? Sure. But when you're writing tests, you'll be glad it's there.
+The notable exception is `LoggingService.shared`, which uses a singleton pattern. Since logging is cross-cutting and doesn't affect business logic or test outcomes, a singleton provides better ergonomics without compromising testability. The protocol-based approach adds boilerplate, but the testing benefits outweigh the additional code.
 
 ### Error Handling
-Instead of showing users raw error messages like "URLError.notConnectedToInternet", I built a `UserFacingError` model that translates technical errors into plain English with actionable retry buttons.
+Rather than exposing technical errors like "URLError.notConnectedToInternet", the `UserFacingError` model transforms system errors into user-friendly messages with contextual actions (e.g., retry buttons).
 
-When the network fails but we have cached data, we show it with a warning banner instead of just failing. The user can still see something useful while offline.
-
-Is it extra work to map errors? Yes. Is it worth it for the UX? Absolutely.
+When network calls fail but cached data exists, the app displays the cached content with a warning banner rather than blocking the user entirely. This graceful degradation improves user experience at the cost of additional error mapping logic.
 
 ## Testing
 
