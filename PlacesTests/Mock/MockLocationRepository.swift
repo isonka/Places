@@ -1,15 +1,15 @@
 import Foundation
 @testable import Places
 
-class MockLocationRepository: LocationRepositoryProtocol {
-    var fetchLocationsResult: FetchLocationsResult = .success([])
-    var fetchLocationsCalled = false
-    var fetchLocationsCallCount = 0
+final class MockLocationRepository: LocationRepositoryProtocol, @unchecked Sendable {
+    var mockResult: FetchLocationsResult = .success([])
     
     func fetchLocations() async -> FetchLocationsResult {
-        fetchLocationsCalled = true
-        fetchLocationsCallCount += 1
-        return fetchLocationsResult
+        return mockResult
+    }
+    
+    func reset() {        
+        mockResult = .success([])
     }
 }
 

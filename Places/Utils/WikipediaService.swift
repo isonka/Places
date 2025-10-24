@@ -10,10 +10,9 @@ protocol WikipediaServiceProtocol: ObservableObject {
 
 class WikipediaService: WikipediaServiceProtocol {
     @Published var wikipediaError: UserFacingError? = nil
-    private let logger: LoggingServiceProtocol
+    private let logger: LoggingServiceProtocol = LoggingService.shared
     
-    init(logger: LoggingServiceProtocol = LoggingService.shared) {
-        self.logger = logger
+    init() {        
         logger.debug("WikipediaService initialized")
     }
     
@@ -48,6 +47,8 @@ class WikipediaService: WikipediaServiceProtocol {
         let appStoreURL = "https://apps.apple.com/app/wikipedia/id324715238"
         if let url = URL(string: appStoreURL) {
             UIApplication.shared.open(url)
+        } else {
+            logger.error("Invalid App Store URL: \(appStoreURL)")
         }
     }
     

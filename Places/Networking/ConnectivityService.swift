@@ -7,7 +7,7 @@ protocol ConnectivityServiceProtocol: Sendable {
     func checkConnection() async -> Bool
 }
 
-final class ConnectivityService: ConnectivityServiceProtocol {
+final class ConnectivityService: ConnectivityServiceProtocol, @unchecked Sendable {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "ConnectivityMonitor")
     private let subject = CurrentValueSubject<Bool, Never>(true)

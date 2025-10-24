@@ -2,7 +2,7 @@ import XCTest
 @testable import Places
 
 final class LocationRepositoryTests: XCTestCase {
-    var repository: LocationRepository!
+    var mockRepository: LocationRepositoryProtocol!
     var mockLocationService: MockLocationService!
     var mockCacheManager: MockCacheManager!
     
@@ -10,11 +10,11 @@ final class LocationRepositoryTests: XCTestCase {
         super.setUp()
         mockLocationService = MockLocationService()
         mockCacheManager = MockCacheManager()
-        repository = LocationRepository(locationService: mockLocationService, cacheManager: mockCacheManager)
+        mockRepository = LocationRepository(locationService: mockLocationService, cacheManager: mockCacheManager)
     }
     
     override func tearDown() {
-        repository = nil
+        mockRepository = nil
         mockLocationService = nil
         mockCacheManager = nil
         super.tearDown()
@@ -26,7 +26,7 @@ final class LocationRepositoryTests: XCTestCase {
             Location(name: "Rotterdam", lat: 51.9225, long: 4.47917)
         ]
         mockLocationService.result = expectedLocations
-        let result = await repository.fetchLocations()
+        let result = await mockRepository.fetchLocations()
         switch result {
         case .success(let locations):
             XCTAssertEqual(locations.count, 2)
@@ -40,7 +40,7 @@ final class LocationRepositoryTests: XCTestCase {
     func testFetchLocationsSuccessSavesToCache() async {
         let expectedLocations = [Location(name: "Test", lat: 1.0, long: 2.0)]
         mockLocationService.result = expectedLocations        
-        _ = await repository.fetchLocations()
+        _ = await mockRepository.fetchLocations()
         XCTAssertTrue(mockCacheManager.saveCalled)
         XCTAssertEqual(mockCacheManager.savedKey, "Locations")
         XCTAssertEqual(mockCacheManager.savedLocations?.count, 1)
@@ -51,7 +51,7 @@ final class LocationRepositoryTests: XCTestCase {
         let cachedLocations = [Location(name: "Cached Location", lat: 10.0, long: 20.0)]
         mockLocationService.errorToThrow = NetworkError.noConnection
         mockCacheManager.cachedLocations = cachedLocations
-        let result = await repository.fetchLocations()
+        let result = await mockRepository.fetchLocations()
         switch result {
         case .failureWithCache(let error, let cached):
             XCTAssertEqual(cached.count, 1)
@@ -69,7 +69,7 @@ final class LocationRepositoryTests: XCTestCase {
         let cachedLocations = [Location(name: "Cached", lat: 5.0, long: 10.0)]
         mockLocationService.errorToThrow = NetworkError.requestFailed(NSError(domain: "test", code: 500))
         mockCacheManager.cachedLocations = cachedLocations
-        _ = await repository.fetchLocations()
+        _ = await mockRepository.fetchLocations()
         XCTAssertTrue(mockCacheManager.loadCalled)
         XCTAssertEqual(mockCacheManager.loadedKey, "Locations")
     }
@@ -77,7 +77,7 @@ final class LocationRepositoryTests: XCTestCase {
     func testFetchLocationsFailureWithoutCache() async {
         mockLocationService.errorToThrow = NetworkError.noConnection
         mockCacheManager.cachedLocations = nil
-        let result = await repository.fetchLocations()
+        let result = await mockRepository.fetchLocations()
         switch result {
         case .failure(let error):
             XCTAssertTrue(error is NetworkError)
@@ -92,7 +92,7 @@ final class LocationRepositoryTests: XCTestCase {
     func testFetchLocationsDecodingFailureWithoutCache() async {
         mockLocationService.errorToThrow = NetworkError.decodingFailed(NSError(domain: "test", code: 1))
         mockCacheManager.cachedLocations = nil
-        let result = await repository.fetchLocations()
+        let result = await mockRepository.fetchLocations()
         switch result {
         case .failure(let error):
             XCTAssertTrue(error is NetworkError)
@@ -108,7 +108,7 @@ final class LocationRepositoryTests: XCTestCase {
     
     func testFetchLocationsEmptyArraySuccess() async {
         mockLocationService.result = []
-        let result = await repository.fetchLocations()
+        let result = await mockRepository.fetchLocations()
         switch result {
         case .success(let locations):
             XCTAssertTrue(locations.isEmpty)
@@ -120,7 +120,7 @@ final class LocationRepositoryTests: XCTestCase {
     func testFetchLocationsEmptyCachedArray() async {
         mockLocationService.errorToThrow = NetworkError.noConnection
         mockCacheManager.cachedLocations = []
-        let result = await repository.fetchLocations()
+        let result = await mockRepository.fetchLocations()
         switch result {
         case .failureWithCache(_, let cached):
             XCTAssertTrue(cached.isEmpty)

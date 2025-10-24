@@ -8,18 +8,18 @@ struct ErrorBannerView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: error.severity.icon)
                     .font(.title3)
-                    .foregroundColor(iconColor)
+                    .foregroundColor(error.severity.primaryColor)
                     .frame(width: 24, alignment: .center)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(error.title)
                         .font(.headline)
-                        .foregroundColor(textColor)
+                        .foregroundColor(error.severity.primaryColor)
                         .fixedSize(horizontal: false, vertical: false)
                     
                     Text(error.message)
                         .font(.subheadline)
-                        .foregroundColor(textColor.opacity(0.9))
+                        .foregroundColor(error.severity.primaryColor.opacity(0.9))
                         .fixedSize(horizontal: false, vertical: false)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -29,17 +29,17 @@ struct ErrorBannerView: View {
                 Button(action: action) {
                     Text(actionTitle)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundColor(buttonTextColor)
+                        .foregroundColor(error.severity.buttonTextColor)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(buttonBackgroundColor)
+                        .background(error.severity.buttonColor)
                         .cornerRadius(8)
                 }
                 .accessibilityLabel("\(actionTitle) to resolve error")
             }
         }
         .padding(16)
-        .background(backgroundColor)
+        .background(error.severity.backgroundColor)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
         .padding(.horizontal, 16)
@@ -47,56 +47,6 @@ struct ErrorBannerView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(error.severity == .error ? "Error" : error.severity == .warning ? "Warning" : "Information"): \(error.title)")
         .accessibilityHint(error.message)
-    }
-    
-    // MARK: - Color Helpers
-    
-    private var backgroundColor: Color {
-        switch error.severity {
-        case .info:
-            return Color.blue.opacity(0.1)
-        case .warning:
-            return Color.orange.opacity(0.1)
-        case .error:
-            return Color.red.opacity(0.1)
-        }
-    }
-    
-    private var iconColor: Color {
-        switch error.severity {
-        case .info:
-            return .blue
-        case .warning:
-            return .orange
-        case .error:
-            return .red
-        }
-    }
-    
-    private var textColor: Color {
-        switch error.severity {
-        case .info:
-            return .blue
-        case .warning:
-            return .orange
-        case .error:
-            return .red
-        }
-    }
-    
-    private var buttonBackgroundColor: Color {
-        switch error.severity {
-        case .info:
-            return .blue
-        case .warning:
-            return .orange
-        case .error:
-            return .red
-        }
-    }
-    
-    private var buttonTextColor: Color {
-        return .white
     }
 }
 

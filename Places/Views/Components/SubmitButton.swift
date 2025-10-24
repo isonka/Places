@@ -5,7 +5,12 @@ struct SubmitButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            if isEnabled {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }
+            action()
+        }) {
             buttonContent
         }
         .buttonStyle(.plain)

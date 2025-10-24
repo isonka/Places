@@ -5,12 +5,14 @@ import Foundation
 @MainActor
 final class PlacesViewModelTests: XCTestCase {
     var mockService: MockLocationService!
+    var mockRepository: MockLocationRepository!
     var viewModel: PlacesViewModel!
     
     override func setUp() {
         super.setUp()
         mockService = MockLocationService()
-        viewModel = PlacesViewModel(locationRepository: LocationRepository(locationService: mockService))
+        mockRepository = MockLocationRepository()
+        viewModel = PlacesViewModel(locationRepository: mockRepository)
     }
     
     func testInitialState() {
@@ -24,7 +26,7 @@ final class PlacesViewModelTests: XCTestCase {
     
     func testLoadLocationsSuccess() async throws {
         let location = Location(name: "Test Place", lat: 41.2, long: 29.0)
-        mockService.result = [location]
+        mockRepository.mockResult = .success([location])
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
@@ -35,7 +37,8 @@ final class PlacesViewModelTests: XCTestCase {
     }
     
     func testLoadLocationsNetworkError() async throws {
-        mockService.errorToThrow = NetworkError.noConnection
+        let cachedLocation = Location(name: "Cached Place", lat: 41.2, long: 29.0)
+        mockRepository.mockResult = .failureWithCache(error: NetworkError.noConnection, cached: [cachedLocation])
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
@@ -46,7 +49,8 @@ final class PlacesViewModelTests: XCTestCase {
     }
     
     func testLoadLocationsOtherError() async throws {
-        mockService.errorToThrow = NetworkError.badURL
+        let cachedLocation = Location(name: "Cached", lat: 41.2, long: 29.0)
+        mockRepository.mockResult = .failureWithCache(error: NetworkError.badURL, cached: [cachedLocation])
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertFalse(viewModel.locations.isEmpty)
@@ -78,7 +82,7 @@ final class PlacesViewModelTests: XCTestCase {
     }
     
     func testLoadLocationsWithEmptyList() async throws {
-        mockService.result = []
+        mockRepository.mockResult = .success([])
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertTrue(viewModel.locations.isEmpty)
@@ -90,7 +94,7 @@ final class PlacesViewModelTests: XCTestCase {
             Location(name: nil, lat: 41.2, long: 29.0),
             Location(name: "Valid Name", lat: 42.0, long: 30.0)
         ]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 2)
@@ -105,10 +109,10 @@ final class PlacesViewModelTests: XCTestCase {
             Location(name: "Amsterdam", lat: 52.3676, long: 4.9041),
             Location(name: "Rotterdam", lat: 51.9225, long: 4.47917)
         ]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertEqual(viewModel.locations.count, 3) // Should keep duplicates
+        XCTAssertEqual(viewModel.locations.count, 3)
     }
     
     func testLoadLocationsWithIdenticalCoordinatesDifferentNames() async throws {
@@ -116,7 +120,7 @@ final class PlacesViewModelTests: XCTestCase {
             Location(name: "Location A", lat: 52.3676, long: 4.9041),
             Location(name: "Location B", lat: 52.3676, long: 4.9041)
         ]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 2)
@@ -124,7 +128,7 @@ final class PlacesViewModelTests: XCTestCase {
     
     func testMultipleConcurrentLoadCalls() async throws {
         let locations = [Location(name: "Test", lat: 41.2, long: 29.0)]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         async let load1: () = viewModel.loadLocations()
         async let load2: () = viewModel.loadLocations()
         async let load3: () = viewModel.loadLocations()
@@ -136,14 +140,13 @@ final class PlacesViewModelTests: XCTestCase {
     }
     
     func testLoadLocationsAfterPreviousError() async throws {
-        mockService.errorToThrow = NetworkError.noConnection
+        mockRepository.mockResult = .failure(error: NetworkError.noConnection)
         await viewModel.loadLocations()
         XCTAssertNotNil(viewModel.userFacingError)
-        mockService.errorToThrow = nil
-        mockService.result = [Location(name: "Success", lat: 41.2, long: 29.0)]
+        mockRepository.mockResult = .success([Location(name: "Success", lat: 41.2, long: 29.0)])
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertNil(viewModel.userFacingError) // Error should be cleared
+        XCTAssertNil(viewModel.userFacingError)
         XCTAssertEqual(viewModel.locations.count, 1)
     }
     
@@ -151,7 +154,7 @@ final class PlacesViewModelTests: XCTestCase {
         let largeList = (0..<1000).map { i in
             Location(name: "Location \(i)", lat: Double(i % 180 - 90), long: Double(i % 360 - 180))
         }
-        mockService.result = largeList
+        mockRepository.mockResult = .success(largeList)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 1000)
@@ -200,7 +203,7 @@ final class PlacesViewModelTests: XCTestCase {
     
     func testLocationWithExtremelySmallCoordinates() async throws {
         let locations = [Location(name: "Tiny", lat: 0.0000001, long: -0.0000001)]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 1)
@@ -209,7 +212,7 @@ final class PlacesViewModelTests: XCTestCase {
     
     func testLocationWithZeroCoordinates() async throws {
         let locations = [Location(name: "Null Island", lat: 0.0, long: 0.0)]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 1)
@@ -218,17 +221,16 @@ final class PlacesViewModelTests: XCTestCase {
     }
     
     func testErrorMessageClearedOnSuccessfulLoad() async throws {
-        mockService.errorToThrow = NetworkError.noConnection
+        mockRepository.mockResult = .failure(error: NetworkError.noConnection)
         await viewModel.loadLocations()
         XCTAssertNotNil(viewModel.userFacingError)
-        mockService.errorToThrow = nil
-        mockService.result = [Location(name: "Test", lat: 41.2, long: 29.0)]
+        mockRepository.mockResult = .success([Location(name: "Test", lat: 41.2, long: 29.0)])
         await viewModel.loadLocations()
         XCTAssertNil(viewModel.userFacingError)
     }
     
     func testIsLoadingStateTransitions() async throws {
-        mockService.result = [Location(name: "Test", lat: 41.2, long: 29.0)]
+        mockRepository.mockResult = .success([Location(name: "Test", lat: 41.2, long: 29.0)])
         XCTAssertTrue(viewModel.isLoading)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
@@ -241,7 +243,7 @@ final class PlacesViewModelTests: XCTestCase {
             Location(name: "東京 (Tokyo)", lat: 35.6762, long: 139.6503),
             Location(name: "Москва", lat: 55.7558, long: 37.6173)
         ]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         
         XCTAssertFalse(viewModel.isLoading)
@@ -253,7 +255,7 @@ final class PlacesViewModelTests: XCTestCase {
     func testLocationWithVeryLongName() async throws {
         let longName = String(repeating: "A", count: 1000)
         let locations = [Location(name: longName, lat: 41.2, long: 29.0)]
-        mockService.result = locations
+        mockRepository.mockResult = .success(locations)
         await viewModel.loadLocations()
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertEqual(viewModel.locations.count, 1)

@@ -1,10 +1,3 @@
-//
-//  WikipediaServiceTests.swift
-//  PlacesTests
-//
-//  Created by Onur Karsli on 23/10/2025.
-//
-
 import XCTest
 import Combine
 @testable import Places
@@ -25,47 +18,34 @@ final class WikipediaServiceTests: XCTestCase {
         super.tearDown()
     }
     
-    func testOpenWikipediaWithValidCoordinates() {
-        let latitude = 37.7749
-        let longitude = -122.4194
-        service.openWikipedia(latitude: latitude, longitude: longitude)
-        XCTAssertTrue(true)
+    func testOpenCustomLocationWithInvalidCoordinatesDoesNotSetError() {
+        service.openCustomLocation(latitude: "invalid", longitude: "151.2093")
+        XCTAssertNil(service.wikipediaError, "Invalid input should fail validation silently")
     }
     
-    func testOpenCustomLocationWithValidStringCoordinates() {
-        let latitude = "37.7749"
-        let longitude = "-122.4194"
-        service.openCustomLocation(latitude: latitude, longitude: longitude)
-        XCTAssertTrue(true)
+    func testOpenCustomLocationWithInvalidLongitude() {
+        service.openCustomLocation(latitude: "37.7749", longitude: "invalid")
+        XCTAssertNil(service.wikipediaError, "Invalid longitude should fail validation silently")
     }
     
-    func testOpenCustomLocationWithInvalidCoordinates() {
-        let testCases = [
-            ("invalid", "151.2093"),  // Invalid latitude
-            ("37.7749", "invalid"),   // Invalid longitude
-            ("95.0", "0"),            // Out of range latitude
-            ("0", "185.0"),           // Out of range longitude
-            ("", ""),                 // Empty strings
-        ]
-        for (lat, lon) in testCases {
-            service.openCustomLocation(latitude: lat, longitude: lon)
-            XCTAssertTrue(true)
-        }
+    func testOpenCustomLocationWithOutOfRangeLatitude() {
+        service.openCustomLocation(latitude: "95.0", longitude: "0")
+        XCTAssertNil(service.wikipediaError, "Out of range latitude should fail validation silently")
     }
     
-    func testOpenCustomLocationWithBoundaryValues() {
-        let testCases = [
-            ("90.0", "180.0"),     // Maximum valid values
-            ("-90.0", "-180.0"),   // Minimum valid values
-        ]
-        for (lat, lon) in testCases {
-            service.openCustomLocation(latitude: lat, longitude: lon)
-            XCTAssertTrue(true)
-        }
-    }    
+    func testOpenCustomLocationWithOutOfRangeLongitude() {
+        service.openCustomLocation(latitude: "0", longitude: "185.0")
+        XCTAssertNil(service.wikipediaError, "Out of range longitude should fail validation silently")
+    }
+    
+    func testOpenCustomLocationWithEmptyStrings() {
+        service.openCustomLocation(latitude: "", longitude: "")
+        XCTAssertNil(service.wikipediaError, "Empty strings should fail validation silently")
+    }
     
     func testWikipediaErrorCanBeSet() {
         let expectation = XCTestExpectation(description: "Error should be published")
+        
         service.$wikipediaError
             .dropFirst()
             .sink { error in
@@ -74,9 +54,19 @@ final class WikipediaServiceTests: XCTestCase {
                 }
             }
             .store(in: &cancellables)
+        
         service.wikipediaError = .wikipediaNotInstalled { }
+        
         wait(for: [expectation], timeout: 1.0)
         XCTAssertNotNil(service.wikipediaError)
         XCTAssertEqual(service.wikipediaError?.title, "Wikipedia App Required")
+    }
+    
+    func testWikipediaErrorCanBeCleared() {
+        service.wikipediaError = .wikipediaNotInstalled { }
+        XCTAssertNotNil(service.wikipediaError)
+        
+        service.wikipediaError = nil
+        XCTAssertNil(service.wikipediaError)
     }
 }

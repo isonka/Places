@@ -1,8 +1,6 @@
 import Foundation
 
 extension Date {
-    /// Returns a human-readable "time ago" string from this date to now
-    /// Examples: "just now", "5 minutes ago", "2 hours ago", "3 days ago"
     var timeAgoString: String {
         let interval = Date().timeIntervalSince(self)
         

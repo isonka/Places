@@ -10,20 +10,18 @@ protocol LocationRepositoryProtocol: Sendable {
     func fetchLocations() async -> FetchLocationsResult
 }
 
-final class LocationRepository: LocationRepositoryProtocol {
+final class LocationRepository: LocationRepositoryProtocol, @unchecked Sendable {
     private let cacheKey = "Locations"
     private let locationService: LocationServiceProtocol
     private let cacheManager: CacheManagerProtocol
-    private let logger: LoggingServiceProtocol
+    private let logger: LoggingServiceProtocol = LoggingService.shared
     
     init(
         locationService: LocationServiceProtocol,
         cacheManager: CacheManagerProtocol = CacheManager(),
-        logger: LoggingServiceProtocol = LoggingService.shared
     ) {
         self.locationService = locationService
         self.cacheManager = cacheManager
-        self.logger = logger
         logger.debug("LocationRepository initialized")
     }
     

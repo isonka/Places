@@ -14,14 +14,12 @@ protocol NetworkManagerProtocol: Sendable {
 
 struct NetworkManager: NetworkManagerProtocol {
     private let connectivityService: ConnectivityServiceProtocol
-    private let logger: LoggingServiceProtocol
+    private let logger: LoggingServiceProtocol = LoggingService.shared
     
     init(
-        connectivityService: ConnectivityServiceProtocol,
-        logger: LoggingServiceProtocol = LoggingService.shared
+        connectivityService: ConnectivityServiceProtocol        
     ) {
-        self.connectivityService = connectivityService
-        self.logger = logger
+        self.connectivityService = connectivityService        
     }
     
     func fetch<T: Decodable>(from urlString: String,

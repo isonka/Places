@@ -5,7 +5,10 @@ struct LocationRow: View {
     let onTap: (Location) -> Void
     
     var body: some View {
-        Button(action: { onTap(location) }) {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            onTap(location)
+        }) {
             HStack(spacing: 16) {
                 locationIcon
                 locationDetails
@@ -20,8 +23,6 @@ struct LocationRow: View {
         .accessibilityHint("Opens Wikipedia for this location")
         .accessibilityValue("Latitude \(location.lat), Longitude \(location.long)")
     }
-    
-    // MARK: - Components
     
     private var locationIcon: some View {
         ZStack {

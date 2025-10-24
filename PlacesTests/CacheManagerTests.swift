@@ -2,12 +2,12 @@ import XCTest
 @testable import Places
 
 final class CacheManagerTests: XCTestCase {
-    var cacheManager: CacheManager!
+    var cacheManager: CacheManagerProtocol!
     let testKey = "test_locations"
 
     override func setUp() async throws {
         try await super.setUp()
-        cacheManager = CacheManager(qos: .utility)
+        cacheManager = MockCacheManager()
         await cacheManager.clearCache()
     }
     
@@ -123,16 +123,22 @@ final class CacheManagerTests: XCTestCase {
     }
     
     func testCorruptedCacheIsHandledGracefully() async {
+        // This test requires the real CacheManager to test file corruption
+        let realCacheManager = await CacheManager(qos: .utility)
+        let corruptedKey = "corrupted_test_key"
+                
         let locations = [Location(name: "Test", lat: 1.0, long: 2.0)]
         let response = LocationsResponse(locations: locations)
-        await cacheManager.save(response, forKey: testKey)
-        
+        await realCacheManager.save(response, forKey: corruptedKey)
+                
         let cacheDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let cacheURL = cacheDir.appendingPathComponent("\(testKey).json")
+        let cacheURL = cacheDir.appendingPathComponent("\(corruptedKey).json")
         try? "corrupted data".write(to: cacheURL, atomically: true, encoding: .utf8)
         
-        let loaded = await cacheManager.load(LocationsResponse.self, forKey: testKey)
+        let loaded = await realCacheManager.load(LocationsResponse.self, forKey: corruptedKey)
         XCTAssertNil(loaded, "Corrupted cache should return nil")
+                
+        await realCacheManager.clearCache()
     }
     
     func testEmptyArrayCanBeCached() async {

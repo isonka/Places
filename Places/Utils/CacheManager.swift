@@ -8,11 +8,10 @@ protocol CacheManagerProtocol: Sendable {
 
 struct CacheManager: CacheManagerProtocol {
     private let queue: DispatchQueue
-    private let logger: LoggingServiceProtocol
+    private let logger: LoggingServiceProtocol = LoggingService.shared
     
-    init(qos: DispatchQoS = .userInitiated, logger: LoggingServiceProtocol = LoggingService.shared) {
-        self.queue = DispatchQueue(label: "com.places.cacheManager", qos: qos)
-        self.logger = logger
+    init(qos: DispatchQoS = .userInitiated) {
+        self.queue = DispatchQueue(label: "com.places.cacheManager", qos: qos)        
         logger.debug("CacheManager initialized")
     }
     

@@ -48,7 +48,8 @@ struct ContentView: View {
         LocationsListView(
             locations: viewModel.locations,
             isLoading: viewModel.isLoading,
-            onLocationTap: handleLocationTap
+            onLocationTap: handleLocationTap,
+            lastUpdated: viewModel.lastSuccessfulFetch
         )
     }
     
@@ -70,20 +71,16 @@ struct ContentView: View {
         )
     }
     
-    private func handleCustomLocationSubmit() {
-        logger.debug("Custom location submit - Valid: \(viewModel.isCustomLocationValid), Lat: '\(viewModel.customLatitude)', Long: '\(viewModel.customLongitude)'")
-        
-        guard viewModel.isCustomLocationValid,
-              let latitude = Double(viewModel.customLatitude),
-              let longitude = Double(viewModel.customLongitude) else {
-            logger.warning("Custom location validation failed or couldn't convert to Double")
+    func handleCustomLocationSubmit() {
+        guard viewModel.isCustomLocationValid else {
+            logger.warning("Custom location validation failed")
             return
         }
         
-        logger.info("Opening Wikipedia for custom location: (\(latitude), \(longitude))")
-        wikipediaService.openWikipedia(
-            latitude: latitude,
-            longitude: longitude
+        logger.info("Opening Wikipedia for custom location")
+        wikipediaService.openCustomLocation(
+            latitude: viewModel.customLatitude,
+            longitude: viewModel.customLongitude
         )
     }
 }
@@ -91,16 +88,11 @@ struct ContentView: View {
 // MARK: - Preview
 
 #Preview {
-    ContentView(
+    let dependencies = AppDependencies.make()
+    return ContentView(
         viewModel: PlacesViewModel(
-            locationRepository: LocationRepository(
-                locationService: LocationService(
-                    networkManager: NetworkManager(
-                        connectivityService: ConnectivityService()
-                    )
-                )
-            )
+            locationRepository: dependencies.locationRepository
         )
     )
-    .environmentObject(WikipediaService())
+    .environmentObject(dependencies.wikipediaService as! WikipediaService)
 }

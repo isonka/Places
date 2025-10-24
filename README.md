@@ -7,17 +7,42 @@ A SwiftUI iOS app that displays locations and integrates with Wikipedia for loca
 **MVVM + Repository Pattern** with protocol-based dependency injection:
 
 ```
-Views → ViewModels → Repositories → Services
-  ↓          ↓            ↓            ↓
-SwiftUI  Business     Data Layer   Network
-         Logic        + Cache      + APIs
+┌─────────────────────────────────────────────────────────────────┐
+│  Views (SwiftUI)                                                │
+│  ├─ ContentView                                                 │
+│  ├─ LocationsListView / CustomLocationView                      │
+│  └─ Components (LocationRow, ErrorBannerView, etc.)             │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  ViewModels
+│  └─ PlacesViewModel (Business Logic, State Management)          │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Repositories (Data Layer)                                      │
+│  └─ LocationRepository (Network + Cache Coordination)           │
+└─────────────┬──────────────────────────┬────────────────────────┘
+              │                          │
+              ↓                          ↓
+    ┌──────────────────┐      ┌──────────────────┐
+    │  Services        │      │  Cache           │
+    │  ├─ Location     │      │  └─ CacheManager │
+    │  ├─ Network      │      │     (File-based) │
+    │  ├─ Connectivity │      └──────────────────┘
+    │  ├─ Wikipedia    │
+    │  └─ Logging      │
+    └──────────────────┘
+
 ```
 
 ## Requirements
 
-- iOS 17.0+
-- Xcode 14.0+
-- Swift 5.7+
+- iOS 18.0+
+- Xcode 16.0+
+- Swift 5.9+
 - Wikipedia app (optional, for full functionality)
 
 ## Installation
@@ -56,4 +81,18 @@ wikipedia://places?location=<lat>,<long>
 ```
 
 If Wikipedia is not installed, displays a sheet with App Store link.
+
+### Installing Wikipedia App for Testing
+
+To test the full Wikipedia integration functionality:
+
+**Build from source**
+   ```bash
+   git clone https://github.com/wikimedia/wikipedia-ios.git
+   cd wikipedia-ios
+   ./scripts/setup
+   # Open Wikipedia.xcodeproj and run on simulator
+   ```
+
+**Note:** Building from source requires Xcode 16.0+ (same as this project). See the [Wikipedia iOS repository](https://github.com/wikimedia/wikipedia-ios) for details.
 

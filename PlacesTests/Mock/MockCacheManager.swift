@@ -1,14 +1,7 @@
-//
-//  MockCacheManager.swift
-//  PlacesTests
-//
-//  Created by Onur Karsli on 23/10/2025.
-//
-
 import Foundation
 @testable import Places
 
-final class MockCacheManager: CacheManagerProtocol {
+final class MockCacheManager: CacheManagerProtocol, @unchecked Sendable {
     var saveCalled = false
     var loadCalled = false
     var clearCacheCalled = false
