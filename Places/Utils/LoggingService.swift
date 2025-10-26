@@ -1,5 +1,5 @@
 import Foundation
-
+import os
 enum LogLevel: String {
     case debug = "🔍 DEBUG"
     case info = "ℹ️ INFO"
@@ -53,10 +53,10 @@ extension LoggingServiceProtocol {
     }
 }
 
-final class LoggingService: LoggingServiceProtocol, @unchecked Sendable {
-    
+final class LoggingService: LoggingServiceProtocol, Sendable {
     static let shared = LoggingService()
     
+    private let lock = OSAllocatedUnfairLock()
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss.SSS"
@@ -72,7 +72,9 @@ final class LoggingService: LoggingServiceProtocol, @unchecked Sendable {
         function: String = #function,
         line: Int = #line
     ) {
-        let timestamp = dateFormatter.string(from: Date())
+        let timestamp = lock.withLock {
+            dateFormatter.string(from: Date())
+        }
         let fileName = (file as NSString).lastPathComponent
         let logMessage = "[\(timestamp)] \(level.rawValue) [\(fileName):\(line)] \(function) - \(message)"
         
