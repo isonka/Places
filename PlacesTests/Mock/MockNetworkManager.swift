@@ -3,16 +3,10 @@ import Combine
 @testable import Places
 
 final class MockConnectivityService: ConnectivityServiceProtocol {
-    var isConnected: Bool
-    private var subject = CurrentValueSubject<Bool, Never>(true)
-    
-    var isConnectedPublisher: AnyPublisher<Bool, Never> {
-        subject.eraseToAnyPublisher()
-    }
-    
+    var isConnected: Bool    
+        
     init(isConnected: Bool = true) {
-        self.isConnected = isConnected
-        subject.send(isConnected)
+        self.isConnected = isConnected        
     }
     
     func checkConnection() async -> Bool {
@@ -20,8 +14,7 @@ final class MockConnectivityService: ConnectivityServiceProtocol {
     }
     
     func setConnected(_ connected: Bool) {
-        isConnected = connected
-        subject.send(connected)
+        isConnected = connected        
     }
 }
 

@@ -2,33 +2,34 @@ import Foundation
 import Combine
 import Network
 
-protocol ConnectivityServiceProtocol: Sendable {
-    var isConnectedPublisher: AnyPublisher<Bool, Never> { get }
+protocol ConnectivityServiceProtocol {    
     func checkConnection() async -> Bool
 }
 
-final class ConnectivityService: ConnectivityServiceProtocol, @unchecked Sendable {
+final class ConnectivityService: ConnectivityServiceProtocol {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "ConnectivityMonitor")
-    private let subject = CurrentValueSubject<Bool, Never>(true)
-    
-    var isConnectedPublisher: AnyPublisher<Bool, Never> {
-        subject.eraseToAnyPublisher()
+    private actor ConnectionState {
+        var isConnected: Bool = true
+        
+        func update(_ connected: Bool) {
+            isConnected = connected
+        }
     }
-    
+
+    private let connectionState = ConnectionState()
+        
     init() {
         monitor.pathUpdateHandler = { [weak self] path in
-            self?.subject.send(path.status == .satisfied)
+            Task {
+                await self?.connectionState.update(path.status == .satisfied)
+            }
         }
         monitor.start(queue: queue)
     }
     
     func checkConnection() async -> Bool {
-        await withCheckedContinuation { continuation in
-            queue.async { [weak self] in
-                continuation.resume(returning: self?.subject.value ?? false)
-            }
-        }
+        await connectionState.isConnected
     }
     
     deinit {
