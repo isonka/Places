@@ -72,16 +72,13 @@ struct ContentView: View {
     }
     
     func handleCustomLocationSubmit() {
-        guard viewModel.isCustomLocationValid else {
+        guard let (lat, lon) = viewModel.submitCustomLocation() else {
             logger.warning("Custom location validation failed")
             return
         }
         
         logger.info("Opening Wikipedia for custom location")
-        wikipediaService.openCustomLocation(
-            latitude: viewModel.customLatitude,
-            longitude: viewModel.customLongitude
-        )
+        wikipediaService.openWikipedia(latitude: lat, longitude: lon)
     }
 }
 

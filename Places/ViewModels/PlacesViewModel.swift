@@ -15,7 +15,7 @@ class PlacesViewModel: ObservableObject {
     @Published var longitudeError: String? = nil
     
     private let locationRepository: LocationRepositoryProtocol
-    private let logger: LoggingServiceProtocol = LoggingService.shared
+    private let logger = LoggingService.shared
     private var cancellables = Set<AnyCancellable>()
     
     var isCustomLocationValid: Bool {
@@ -77,40 +77,24 @@ class PlacesViewModel: ObservableObject {
         .store(in: &cancellables)
     }
     
-    private func validate(
-        _ value: String,
-        keyPath: ReferenceWritableKeyPath<PlacesViewModel, String>,
-        errorKeyPath: ReferenceWritableKeyPath<PlacesViewModel, String?>,
-        validator: (String) -> String?
-    ) {
-        let trimmed = value.trimmingCharacters(in: .whitespaces)
-        if trimmed != value && !value.isEmpty {
-            self[keyPath: keyPath] = trimmed
-        }
-        self[keyPath: errorKeyPath] = validator(trimmed)
-    }
-    
-    func submitCustomLocation() -> Bool {
+    func submitCustomLocation() -> (lat: Double, lon: Double)? {
         logger.debug("Custom location submit...")
         
-        guard isCustomLocationValid,
-              let lat = Double(customLatitude),
-              let lon = Double(customLongitude) else {
+        guard isCustomLocationValid else {
             logger.warning("Validation failed")
-            return false
+            return nil
         }
         
+        let lat = Double(customLatitude)!
+        let lon = Double(customLongitude)!
+        
         logger.info("Validated: (\(lat), \(lon))")
-        return true
+        return (lat, lon)
     }
     
     func validateCustomLocation() {
-        validate(customLatitude, keyPath: \.customLatitude,
-                 errorKeyPath: \.latitudeError,
-                 validator: LocationValidator.validateLatitude)
-        validate(customLongitude, keyPath: \.customLongitude,
-                 errorKeyPath: \.longitudeError,
-                 validator: LocationValidator.validateLongitude)
+        latitudeError = LocationValidator.validateLatitude(customLatitude)
+        longitudeError = LocationValidator.validateLongitude(customLongitude)
         
         if isCustomLocationValid {
             logger.debug("Custom location validated: (\(customLatitude), \(customLongitude))")

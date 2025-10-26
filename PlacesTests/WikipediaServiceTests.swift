@@ -18,31 +18,6 @@ final class WikipediaServiceTests: XCTestCase {
         super.tearDown()
     }
     
-    func testOpenCustomLocationWithInvalidCoordinatesDoesNotSetError() {
-        service.openCustomLocation(latitude: "invalid", longitude: "151.2093")
-        XCTAssertNil(service.wikipediaError, "Invalid input should fail validation silently")
-    }
-    
-    func testOpenCustomLocationWithInvalidLongitude() {
-        service.openCustomLocation(latitude: "37.7749", longitude: "invalid")
-        XCTAssertNil(service.wikipediaError, "Invalid longitude should fail validation silently")
-    }
-    
-    func testOpenCustomLocationWithOutOfRangeLatitude() {
-        service.openCustomLocation(latitude: "95.0", longitude: "0")
-        XCTAssertNil(service.wikipediaError, "Out of range latitude should fail validation silently")
-    }
-    
-    func testOpenCustomLocationWithOutOfRangeLongitude() {
-        service.openCustomLocation(latitude: "0", longitude: "185.0")
-        XCTAssertNil(service.wikipediaError, "Out of range longitude should fail validation silently")
-    }
-    
-    func testOpenCustomLocationWithEmptyStrings() {
-        service.openCustomLocation(latitude: "", longitude: "")
-        XCTAssertNil(service.wikipediaError, "Empty strings should fail validation silently")
-    }
-    
     func testWikipediaErrorCanBeSet() {
         let expectation = XCTestExpectation(description: "Error should be published")
         

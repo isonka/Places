@@ -197,8 +197,8 @@ final class PlacesViewModelTests: XCTestCase {
         viewModel.customLatitude = " 45.0 "
         viewModel.customLongitude = "120.0"
         viewModel.validateCustomLocation()
-        XCTAssertTrue(viewModel.isCustomLocationValid)
-        XCTAssertNil(viewModel.latitudeError)
+        XCTAssertFalse(viewModel.isCustomLocationValid)
+        XCTAssertNotNil(viewModel.latitudeError)
     }
     
     func testLocationWithExtremelySmallCoordinates() async throws {

@@ -5,7 +5,6 @@ import Combine
 protocol WikipediaServiceProtocol: ObservableObject {
     var wikipediaError: UserFacingError? { get set }
     func openWikipedia(latitude: Double, longitude: Double)
-    func openCustomLocation(latitude: String, longitude: String)
 }
 
 class WikipediaService: WikipediaServiceProtocol {
@@ -50,18 +49,5 @@ class WikipediaService: WikipediaServiceProtocol {
         } else {
             logger.error("Invalid App Store URL: \(appStoreURL)")
         }
-    }
-    
-    func openCustomLocation(latitude: String, longitude: String) {
-        logger.debug("Validating custom location: (\(latitude), \(longitude))")
-        
-        guard let lat = Double(latitude), let lon = Double(longitude),
-              (-90...90).contains(lat), (-180...180).contains(lon) else {
-            logger.warning("Invalid custom location coordinates")
-            return
-        }
-        
-        logger.info("Custom location validated, opening Wikipedia")
-        openWikipedia(latitude: lat, longitude: lon)
     }
 }
